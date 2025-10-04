@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -28,7 +28,7 @@ export function SessionDetailScreen({ category, session, onNavigate, onBack }: S
   // Mock data for Daily Expression
   const mainPattern = {
     english: "How long does it take to ~?",
-    korean: ": ~하는 데 얼마나 걸리나요?"
+    korean: "~하는 데 얼마나 걸리나요?"
   };
 
   const [expressions, setExpressions] = useState<Expression[]>([
@@ -97,11 +97,11 @@ export function SessionDetailScreen({ category, session, onNavigate, onBack }: S
         {/* Expression Cards */}
         <div className="space-y-4">
           {expressions.map((expression, index) => (
-            <Card key={expression.id} className="p-6">
+            <Card key={expression.id} className="p-6 border-l-4 border-l-blue-500">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <p className="text-lg text-gray-900">{expression.english}</p>
-                  <p className="text-lg text-green-600">→ {expression.korean}</p>
+                  <p className="text-lg text-gray-900 bg-gray-100 p-3 rounded-lg">{expression.english}</p>
+                  <p className="pl-4 border-l-2 border-gray-300 text-gray-400 mt-3">{expression.korean}</p>
                 </div>
                 
                 <AudioPlayer 
@@ -129,7 +129,7 @@ export function SessionDetailScreen({ category, session, onNavigate, onBack }: S
         {allCompleted && (
           <Button 
             onClick={handleNextSession}
-            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />

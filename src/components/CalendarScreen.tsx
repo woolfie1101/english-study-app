@@ -113,32 +113,27 @@ export function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex-1 bg-background">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigateMonth('prev')}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-gray-900">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigateMonth('next')}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </Button>
-        </div>
+      <div className="px-6 pt-12 pb-6">
+        <h1 className="text-center">Study Calendar</h1>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between px-6 pb-6">
+        <Button variant="ghost" size="sm" onClick={() => navigateMonth('prev')}>
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <h2 className="text-xl">
+          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+        </h2>
+        <Button variant="ghost" size="sm" onClick={() => navigateMonth('next')}>
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="px-6 pb-6">
         {/* Calendar Grid */}
         <Card className="p-4">
           {/* Week days header */}
@@ -176,28 +171,51 @@ export function CalendarScreen({ onNavigate }: CalendarScreenProps) {
             ))}
           </div>
         </Card>
+      </div>
 
-        {/* Day Detail */}
-        {selectedDay && (
-          <Card className="p-6">
-            <h3 className="mb-4 text-gray-900">
-              Day {selectedDay.date} - Study Breakdown
+      {/* Legend */}
+      <div className="px-6 pb-4">
+        <Card className="p-4">
+          <div className="flex justify-around text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-500 rounded"></div>
+              <span>Completed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+              <span>Partial</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-gray-200 rounded"></div>
+              <span>Not studied</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Selected Day Details */}
+      {selectedDay && (
+        <div className="px-6 pb-6">
+          <Card className="p-4">
+            <h3 className="mb-3">
+              {monthNames[currentDate.getMonth()]} {selectedDay.date}, {currentDate.getFullYear()}
             </h3>
-            {selectedDay.breakdown && (
-              <div className="space-y-3">
-                {Object.entries(selectedDay.breakdown).map(([category, data]) => (
+            <div className="space-y-2">
+              {selectedDay.breakdown && Object.entries(selectedDay.breakdown).map(([category, data]) => {
+                const percentage = data.total > 0 ? (data.completed / data.total) * 100 : 0;
+                return (
                   <div key={category} className="flex justify-between items-center">
-                    <span className="text-gray-700">{category}</span>
-                    <span className="text-gray-900">
-                      {data.completed}/{data.total}
+                    <span className="text-sm">{category}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {data.completed}/{data.total} ({percentage.toFixed(0)}%)
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
           </Card>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
