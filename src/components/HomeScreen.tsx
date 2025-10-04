@@ -1,4 +1,7 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
@@ -12,17 +15,17 @@ interface Category {
   percentage: number;
 }
 
-interface HomeScreenProps {
-  onNavigate: (screen: string, data?: any) => void;
-}
+export function HomeScreen() {
+  const [today, setToday] = useState<string>("");
 
-export function HomeScreen({ onNavigate }: HomeScreenProps) {
-  const today = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }));
+  }, []);
 
   const overallProgress = {
     completed: 3,
@@ -107,12 +110,13 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                     {category.percentage}% complete
                   </div>
                 </div>
-                <Button 
-                  onClick={() => onNavigate('category', { category })}
-                  className="ml-4 bg-green-500 hover:bg-green-600 text-white"
-                >
-                  {category.completed > 0 ? 'Continue' : 'Start'}
-                </Button>
+                <Link href={`/category/${category.id}`}>
+                  <Button
+                    className="ml-4 bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    {category.completed > 0 ? 'Continue' : 'Start'}
+                  </Button>
+                </Link>
               </div>
             </Card>
           ))}

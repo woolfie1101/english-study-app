@@ -1,13 +1,11 @@
+"use client";
+
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { Button } from "./ui/button";
 import { ChevronRight, Volume2, Moon, Zap, User } from "lucide-react";
 
-interface SettingsScreenProps {
-  onNavigate: (screen: string, data?: any) => void;
-}
-
-export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
+export function SettingsScreen() {
   const settingsSections = [
     {
       title: "Study Settings",

@@ -1,5 +1,7 @@
+"use client";
+
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -15,13 +17,13 @@ interface DayStatus {
   };
 }
 
-interface CalendarScreenProps {
-  onNavigate: (screen: string, data?: any) => void;
-}
-
-export function CalendarScreen({ onNavigate }: CalendarScreenProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+export function CalendarScreen() {
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayStatus | null>(null);
+
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -32,9 +34,11 @@ export function CalendarScreen({ onNavigate }: CalendarScreenProps) {
 
   // Mock data for the calendar
   const generateMockData = (): DayStatus[] => {
+    if (!currentDate) return [];
+
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
     const today = new Date().getDate();
-    
+
     return Array.from({ length: daysInMonth }, (_, i) => {
       const day = i + 1;
       if (day < today - 5) {
@@ -69,10 +73,11 @@ export function CalendarScreen({ onNavigate }: CalendarScreenProps) {
   };
 
   const monthData = generateMockData();
-  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const firstDayOfMonth = currentDate ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay() : 0;
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
+      if (!prev) return new Date();
       const newDate = new Date(prev);
       if (direction === 'prev') {
         newDate.setMonth(prev.getMonth() - 1);
@@ -111,6 +116,14 @@ export function CalendarScreen({ onNavigate }: CalendarScreenProps) {
         return '●';
     }
   };
+
+  if (!currentDate) {
+    return (
+      <div className="flex-1 bg-background flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-background">

@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -20,11 +23,10 @@ interface SessionDetailScreenProps {
   session: {
     number: number;
   };
-  onNavigate: (screen: string, data?: any) => void;
-  onBack: () => void;
 }
 
-export function SessionDetailScreen({ category, session, onNavigate, onBack }: SessionDetailScreenProps) {
+export function SessionDetailScreen({ category, session }: SessionDetailScreenProps) {
+  const router = useRouter();
   // Mock data for Daily Expression
   const mainPattern = {
     english: "How long does it take to ~?",
@@ -62,17 +64,17 @@ export function SessionDetailScreen({ category, session, onNavigate, onBack }: S
 
   const handleNextSession = () => {
     // In a real app, this would navigate to the next session
-    onBack(); // For now, just go back to category
+    router.back(); // For now, just go back to category
   };
 
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 flex items-center space-x-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onBack}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
           className="p-2"
         >
           <ArrowLeft className="w-5 h-5" />
