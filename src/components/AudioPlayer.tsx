@@ -12,62 +12,77 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
+  const [actualDuration, setActualDuration] = useState(duration);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    // Mock audio element since we don't have real audio files
-    const mockAudio = {
-      play: () => Promise.resolve(),
-      pause: () => {},
-      currentTime: 0,
-      duration: duration,
-      loop: false,
-      addEventListener: () => {},
-      removeEventListener: () => {}
-    };
-    
-    audioRef.current = mockAudio as any;
-  }, [duration]);
+  // Construct Supabase Storage URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const fullAudioUrl = audioUrl && supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/audio-files/${audioUrl}`
+    : '';
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          const newTime = prev + 0.1;
-          if (newTime >= duration) {
-            if (isLooping) {
-              return 0;
-            } else {
-              setIsPlaying(false);
-              return duration;
-            }
-          }
-          return newTime;
-        });
-      }, 100);
-    }
-    
+    if (!fullAudioUrl) return;
+
+    const audio = new Audio(fullAudioUrl);
+    audio.loop = isLooping;
+
+    const handleLoadedMetadata = () => {
+      setActualDuration(audio.duration);
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      if (!isLooping) {
+        setCurrentTime(0);
+      }
+    };
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+
+    audioRef.current = audio;
+
     return () => {
-      if (interval) clearInterval(interval);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
     };
-  }, [isPlaying, duration, isLooping]);
+  }, [fullAudioUrl, isLooping]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
+    if (!audioRef.current) return;
+
     if (isPlaying) {
+      audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      setIsPlaying(true);
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error('Error playing audio:', error);
+      }
     }
   };
 
   const toggleLoop = () => {
     setIsLooping(!isLooping);
+    if (audioRef.current) {
+      audioRef.current.loop = !isLooping;
+    }
   };
 
   const handleSeek = (value: number[]) => {
-    const newTime = (value[0] / 100) * duration;
+    if (!audioRef.current) return;
+    const newTime = (value[0] / 100) * actualDuration;
+    audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   };
 
@@ -77,7 +92,7 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const progress = (currentTime / duration) * 100;
+  const progress = (currentTime / actualDuration) * 100;
 
   return (
     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">

@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AudioPlayer } from "./AudioPlayer";
+import { Database } from "@/types/database";
+import { useProgress } from "@/hooks/useProgress";
 
-interface Expression {
-  id: string;
-  english: string;
-  korean: string;
-  audioUrl: string;
+type Expression = Database['public']['Tables']['expressions']['Row']
+type Session = Database['public']['Tables']['sessions']['Row']
+
+interface ExpressionWithStatus extends Expression {
   completed: boolean;
 }
 
@@ -19,48 +20,36 @@ interface SessionDetailScreenProps {
   category: {
     id: string;
     name: string;
+    total_sessions: number;
   };
-  session: {
-    number: number;
+  session: Session & {
+    expressions: Expression[];
   };
 }
 
 export function SessionDetailScreen({ category, session }: SessionDetailScreenProps) {
   const router = useRouter();
-  // Mock data for Daily Expression
+
   const mainPattern = {
-    english: "How long does it take to ~?",
-    korean: "~하는 데 얼마나 걸리나요?"
+    english: session.pattern_english || session.title,
+    korean: session.pattern_korean || ""
   };
 
-  const [expressions, setExpressions] = useState<Expression[]>([
-    {
-      id: "1",
-      english: "How long does it take to edit a video?",
-      korean: "영상 편집하는 데 얼마나 걸리나요?",
-      audioUrl: "/mock-audio-1.mp3",
-      completed: false
-    },
-    {
-      id: "2", 
-      english: "How long does it take to learn English?",
-      korean: "영어 배우는 데 얼마나 걸리나요?",
-      audioUrl: "/mock-audio-2.mp3",
-      completed: false
-    }
-  ]);
+  const [expressionsWithStatus, setExpressionsWithStatus] = useState<ExpressionWithStatus[]>(
+    session.expressions.map(exp => ({ ...exp, completed: false }))
+  );
 
   const handleCompleteExpression = (expressionId: string) => {
-    setExpressions(prev => 
-      prev.map(exp => 
-        exp.id === expressionId 
+    setExpressionsWithStatus(prev =>
+      prev.map(exp =>
+        exp.id === expressionId
           ? { ...exp, completed: true }
           : exp
       )
     );
   };
 
-  const allCompleted = expressions.every(exp => exp.completed);
+  const allCompleted = expressionsWithStatus.every(exp => exp.completed);
 
   const handleNextSession = () => {
     // In a real app, this would navigate to the next session
@@ -81,7 +70,7 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
         </Button>
         <div>
           <h1 className="text-gray-900">{category.name}</h1>
-          <p className="text-sm text-gray-600">Session {session.number}</p>
+          <p className="text-sm text-gray-600">Session {session.session_number}</p>
         </div>
       </div>
 
@@ -98,7 +87,7 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
 
         {/* Expression Cards */}
         <div className="space-y-4">
-          {expressions.map((expression, index) => (
+          {expressionsWithStatus.map((expression, index) => (
             <Card key={expression.id} className="p-6 border-l-4 border-l-blue-500">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -106,8 +95,8 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
                   <p className="pl-4 border-l-2 border-gray-300 text-gray-400 mt-3">{expression.korean}</p>
                 </div>
                 
-                <AudioPlayer 
-                  audioUrl={expression.audioUrl}
+                <AudioPlayer
+                  audioUrl={expression.audio_url || ''}
                   duration={12}
                 />
                 

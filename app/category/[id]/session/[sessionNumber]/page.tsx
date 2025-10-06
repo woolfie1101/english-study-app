@@ -2,27 +2,9 @@
 
 import { SessionDetailScreen } from "@/components/SessionDetailScreen";
 import { useParams, useRouter } from "next/navigation";
-
-const CATEGORIES = {
-  "daily-expression": {
-    id: "daily-expression",
-    name: "Daily Expression",
-    completed: 12,
-    total: 20,
-  },
-  "pattern": {
-    id: "pattern",
-    name: "Pattern",
-    completed: 5,
-    total: 10,
-  },
-  "grammar": {
-    id: "grammar",
-    name: "Grammar",
-    completed: 3,
-    total: 8,
-  },
-};
+import { useEffect } from "react";
+import { useSession } from "@/hooks/useSession";
+import { useCategory } from "@/hooks/useCategory";
 
 export default function SessionDetailPage() {
   const params = useParams();
@@ -30,17 +12,41 @@ export default function SessionDetailPage() {
   const categoryId = params.id as string;
   const sessionNumber = parseInt(params.sessionNumber as string);
 
-  const category = CATEGORIES[categoryId as keyof typeof CATEGORIES];
+  const { category, loading: categoryLoading } = useCategory(categoryId);
+  const { session, loading: sessionLoading, error } = useSession(categoryId, sessionNumber);
 
-  if (!category) {
-    router.push("/");
+  const loading = categoryLoading || sessionLoading;
+
+  useEffect(() => {
+    if (!loading && !session && !error) {
+      router.push(`/category/${categoryId}`);
+    }
+  }, [loading, session, error, router, categoryId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-600">Error: {error.message}</div>
+      </div>
+    );
+  }
+
+  if (!session || !category) {
     return null;
   }
 
   return (
     <SessionDetailScreen
       category={category}
-      session={{ number: sessionNumber }}
+      session={session}
     />
   );
 }

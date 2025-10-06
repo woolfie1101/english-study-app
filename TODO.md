@@ -4,45 +4,57 @@
 
 - [x] PRD.md 백엔드 전략 업데이트 (Supabase → Hybrid 전환 계획)
 - [x] DB 마이그레이션 파일에 테이블 설명 주석 추가
+- [x] Phase 1: Supabase Backend Setup 완료
+- [x] Phase 2: 주요 화면 데이터 연동 완료 (Home, Category, SessionDetail)
+- [x] Phase 3: Storage & Audio 완료
 
-## 🔄 Phase 1: Supabase Backend Setup
+## 🔄 다음 작업 (Next Steps)
 
-### 1. Supabase 프로젝트 설정
-- [ ] Supabase 프로젝트 생성 (supabase.com)
-- [ ] 환경 변수 설정 (.env.local)
-  - NEXT_PUBLIC_SUPABASE_URL
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY
-- [ ] DB 마이그레이션 실행
+### Phase 2 남은 작업: 진행 상황 업데이트 기능
+- [ ] 표현 완료 처리 (user_expression_progress 테이블에 저장)
+- [ ] 세션 완료 처리 (user_session_progress 테이블 업데이트)
+- [ ] 일별 통계 업데이트 (daily_study_stats)
+- [ ] Next Session 버튼 기능 구현 (다음 세션으로 이동)
+- [ ] 진행률 실시간 업데이트 (HomeScreen, CategoryScreen)
 
-### 2. 샘플 데이터 준비
-- [ ] 샘플 데이터 시드 파일 생성 (categories, sessions 구조만)
-- [ ] Supabase에 샘플 데이터 입력
-
-### 3. Supabase Client 설정
-- [ ] @supabase/supabase-js 패키지 설치
-- [ ] Supabase Client 유틸리티 생성 (lib/supabase/client.ts)
-- [ ] TypeScript 타입 정의 생성 (lib/supabase/types.ts)
-
-## 🎨 Phase 2: 컴포넌트 Supabase 연동
-
-### 4. 화면별 데이터 연동
-- [ ] HomeScreen - 카테고리 목록 및 진행률 데이터
-- [ ] CategoryScreen - 세션 목록 데이터
-- [ ] SessionDetailScreen - 표현 목록 및 진행 상황
+### Phase 2 추가 화면 연동
 - [ ] CalendarScreen - 월별 학습 통계
 - [ ] SettingsScreen - 사용자 설정
 
-### 5. 진행 상황 업데이트 기능
-- [ ] 표현 완료 처리 (user_expression_progress)
-- [ ] 세션 완료 처리 (user_session_progress)
-- [ ] 일별 통계 업데이트 (daily_study_stats)
+---
 
-## 📁 Phase 3: Storage & Audio
+## 📦 완료된 Phase 상세
 
-### 6. 오디오 파일 관리
-- [ ] Supabase Storage 버킷 생성
-- [ ] 오디오 파일 업로드 기능
-- [ ] AudioPlayer 컴포넌트 실제 오디오 연동
+### ✅ Phase 1: Supabase Backend Setup
+
+**1. Supabase 프로젝트 설정**
+- [x] Supabase 프로젝트 생성 (https://supabase.com/dashboard/project/mltoqwqobwbzgqutvclv)
+- [x] 환경 변수 설정 (.env.local)
+- [x] DB 마이그레이션 실행 (001_initial_schema.sql)
+
+**2. 샘플 데이터 준비**
+- [x] Daily Expression 카테고리 (5개 세션, 10개 표현)
+- [x] Supabase에 샘플 데이터 입력
+
+**3. Supabase Client 설정**
+- [x] @supabase/supabase-js 설치
+- [x] Client 유틸리티 생성 (src/lib/supabase.ts)
+- [x] TypeScript 타입 정의 (src/types/database.ts)
+
+### ✅ Phase 2: 주요 화면 Supabase 연동
+
+**4. 화면별 데이터 연동**
+- [x] HomeScreen - useCategories hook, 카테고리 목록 표시
+- [x] CategoryScreen - useCategory hook, 세션 목록 표시
+- [x] SessionDetailScreen - useSession hook, 표현 목록 및 패턴 표시
+
+### ✅ Phase 3: Storage & Audio
+
+**6. 오디오 파일 관리**
+- [x] Supabase Storage 버킷 생성 (audio-files)
+- [x] RLS 정책 설정
+- [x] MP3 파일 10개 업로드 (Daily Expression)
+- [x] AudioPlayer 실제 오디오 재생 구현
 
 ## 🐛 Phase 4: 품질 개선
 
