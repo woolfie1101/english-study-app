@@ -61,3 +61,25 @@ export function useSession(categoryId: string, sessionNumber: number) {
 
   return { session, loading, error }
 }
+
+/**
+ * Get next session in category
+ */
+export async function getNextSession(categoryId: string, currentSessionNumber: number) {
+  try {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('session_number')
+      .eq('category_id', categoryId)
+      .gt('session_number', currentSessionNumber)
+      .order('session_number', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) throw error
+    return data?.session_number || null
+  } catch (err) {
+    console.error('Error fetching next session:', err)
+    return null
+  }
+}

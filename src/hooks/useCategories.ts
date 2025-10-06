@@ -9,43 +9,47 @@ interface CategoryWithProgress extends Category {
   percentage: number
 }
 
-export function useCategories() {
+export function useCategories(userId: string = '00000000-0000-0000-0000-000000000001') {
   const [categories, setCategories] = useState<CategoryWithProgress[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        setLoading(true)
+  const fetchCategories = async () => {
+    try {
+      setLoading(true)
 
-        // Fetch all categories
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('categories')
-          .select('*')
-          .order('display_order')
+      // Use the get_categories_with_progress function
+      const { data, error: rpcError } = await supabase
+        .rpc('get_categories_with_progress', { p_user_id: userId })
 
-        if (categoriesError) throw categoriesError
+      if (rpcError) throw rpcError
 
-        // For now, we'll set progress to 0 since we don't have user authentication yet
-        // Later, we'll use the get_user_category_progress function
-        const categoriesWithProgress: CategoryWithProgress[] = (categoriesData || []).map(cat => ({
-          ...cat,
-          completed: 0,
-          percentage: 0
-        }))
+      // Map the result to CategoryWithProgress format
+      const categoriesWithProgress: CategoryWithProgress[] = (data || []).map((row: any) => ({
+        id: row.category_id,
+        name: row.category_name,
+        description: null,
+        display_order: row.display_order,
+        total_sessions: Number(row.total_sessions),
+        completed: Number(row.completed_sessions),
+        percentage: Number(row.percentage),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }))
 
-        setCategories(categoriesWithProgress)
-      } catch (err) {
-        setError(err as Error)
-        console.error('Error fetching categories:', err)
-      } finally {
-        setLoading(false)
-      }
+      setCategories(categoriesWithProgress)
+    } catch (err) {
+      setError(err as Error)
+      console.error('Error fetching categories:', err)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchCategories()
-  }, [])
+  }, [userId])
 
-  return { categories, loading, error }
+  // Return refetch function for manual refresh
+  return { categories, loading, error, refetch: fetchCategories }
 }

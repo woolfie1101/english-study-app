@@ -10,56 +10,69 @@ interface CategoryWithSessions extends Category {
   completed: number
 }
 
-export function useCategory(categoryId: string) {
+export function useCategory(categoryId: string, userId: string = '00000000-0000-0000-0000-000000000001') {
   const [category, setCategory] = useState<CategoryWithSessions | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    async function fetchCategory() {
-      try {
-        setLoading(true)
+  const fetchCategory = async () => {
+    try {
+      setLoading(true)
 
-        // Fetch category
-        const { data: categoryData, error: categoryError } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('id', categoryId)
-          .single()
+      // Fetch category
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', categoryId)
+        .single()
 
-        if (categoryError) throw categoryError
-        if (!categoryData) {
-          setCategory(null)
-          return
-        }
-
-        // Fetch sessions for this category
-        const { data: sessionsData, error: sessionsError } = await supabase
-          .from('sessions')
-          .select('*')
-          .eq('category_id', categoryId)
-          .order('session_number')
-
-        if (sessionsError) throw sessionsError
-
-        // For now, completed is 0 (will add user progress later)
-        const categoryWithSessions: CategoryWithSessions = {
-          ...categoryData,
-          sessions: sessionsData || [],
-          completed: 0
-        }
-
-        setCategory(categoryWithSessions)
-      } catch (err) {
-        setError(err as Error)
-        console.error('Error fetching category:', err)
-      } finally {
-        setLoading(false)
+      if (categoryError) throw categoryError
+      if (!categoryData) {
+        setCategory(null)
+        return
       }
+
+      // Fetch sessions for this category
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('session_number')
+
+      if (sessionsError) throw sessionsError
+
+      // Get user progress for this category
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_session_progress')
+        .select('session_id, status')
+        .eq('user_id', userId)
+        .eq('category_id', categoryId)
+        .eq('status', 'completed')
+
+      if (progressError) throw progressError
+
+      // Count completed sessions
+      const completed = progressData?.length || 0
+
+      const categoryWithSessions: CategoryWithSessions = {
+        ...categoryData,
+        sessions: sessionsData || [],
+        completed
+      }
+
+      setCategory(categoryWithSessions)
+    } catch (err) {
+      setError(err as Error)
+      console.error('Error fetching category:', err)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchCategory()
-  }, [categoryId])
+  }, [categoryId, userId])
 
-  return { category, loading, error }
+  // Return refetch function for manual refresh
+  return { category, loading, error, refetch: fetchCategory }
 }

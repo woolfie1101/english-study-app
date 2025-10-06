@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AudioPlayer } from "./AudioPlayer";
 import { Database } from "@/types/database";
 import { useProgress } from "@/hooks/useProgress";
+import { getNextSession } from "@/hooks/useSession";
 
 type Expression = Database['public']['Tables']['expressions']['Row']
 type Session = Database['public']['Tables']['sessions']['Row']
@@ -29,6 +30,16 @@ interface SessionDetailScreenProps {
 
 export function SessionDetailScreen({ category, session }: SessionDetailScreenProps) {
   const router = useRouter();
+  const {
+    completeExpression,
+    getCompletedExpressions,
+    completeSession,
+    updateDailyStats,
+    loading
+  } = useProgress();
+
+  // TODO: Replace with actual user authentication
+  const userId = '00000000-0000-0000-0000-000000000001';
 
   const mainPattern = {
     english: session.pattern_english || session.title,
@@ -39,21 +50,101 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
     session.expressions.map(exp => ({ ...exp, completed: false }))
   );
 
-  const handleCompleteExpression = (expressionId: string) => {
-    setExpressionsWithStatus(prev =>
-      prev.map(exp =>
-        exp.id === expressionId
-          ? { ...exp, completed: true }
-          : exp
-      )
-    );
+  // Load completed expressions on mount
+  useEffect(() => {
+    const loadCompletedExpressions = async () => {
+      const completed = await getCompletedExpressions(userId, session.id);
+      const completedIds = new Set(completed.map(c => c.expression_id));
+
+      setExpressionsWithStatus(prev =>
+        prev.map(exp => ({
+          ...exp,
+          completed: completedIds.has(exp.id)
+        }))
+      );
+    };
+
+    loadCompletedExpressions();
+  }, [session.id]);
+
+  const handleCompleteExpression = async (expressionId: string) => {
+    try {
+      // Optimistic update
+      setExpressionsWithStatus(prev =>
+        prev.map(exp =>
+          exp.id === expressionId
+            ? { ...exp, completed: true }
+            : exp
+        )
+      );
+
+      // Save to Supabase
+      await completeExpression(
+        userId,
+        expressionId,
+        session.id,
+        category.id
+      );
+    } catch (error) {
+      console.error('Failed to complete expression:', error);
+
+      // Revert on error
+      setExpressionsWithStatus(prev =>
+        prev.map(exp =>
+          exp.id === expressionId
+            ? { ...exp, completed: false }
+            : exp
+        )
+      );
+
+      alert('Failed to save progress. Please try again.');
+    }
   };
 
   const allCompleted = expressionsWithStatus.every(exp => exp.completed);
 
-  const handleNextSession = () => {
-    // In a real app, this would navigate to the next session
-    router.back(); // For now, just go back to category
+  // Auto-complete session when all expressions are completed
+  useEffect(() => {
+    const handleSessionCompletion = async () => {
+      if (allCompleted && expressionsWithStatus.length > 0) {
+        try {
+          // Complete session
+          await completeSession(userId, session.id, category.id);
+          console.log('Session completed successfully');
+
+          // Update daily stats
+          await updateDailyStats(
+            userId,
+            category.id,
+            expressionsWithStatus.length
+          );
+          console.log('Daily stats updated successfully');
+        } catch (error) {
+          console.error('Failed to complete session:', error);
+        }
+      }
+    };
+
+    handleSessionCompletion();
+  }, [allCompleted, expressionsWithStatus.length]);
+
+  const handleNextSession = async () => {
+    try {
+      // Get next session number
+      const nextSessionNumber = await getNextSession(category.id, session.session_number);
+
+      if (nextSessionNumber) {
+        // Navigate to next session
+        router.push(`/category/${category.id}/session/${nextSessionNumber}`);
+      } else {
+        // No more sessions, go back to category
+        alert('Congratulations! You completed all sessions in this category.');
+        router.back();
+      }
+    } catch (error) {
+      console.error('Failed to load next session:', error);
+      router.back();
+    }
   };
 
   return (
@@ -102,14 +193,14 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
                 
                 <Button
                   onClick={() => handleCompleteExpression(expression.id)}
-                  disabled={expression.completed}
+                  disabled={expression.completed || loading}
                   className={`w-full ${
-                    expression.completed 
-                      ? 'bg-green-500 text-white' 
+                    expression.completed
+                      ? 'bg-green-500 text-white'
                       : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
                 >
-                  {expression.completed ? '✅ Completed' : 'Complete'}
+                  {loading ? 'Saving...' : expression.completed ? '✅ Completed' : 'Complete'}
                 </Button>
               </div>
             </Card>

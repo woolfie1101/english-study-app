@@ -10,12 +10,14 @@
 
 ## 🔄 다음 작업 (Next Steps)
 
-### Phase 2 남은 작업: 진행 상황 업데이트 기능
-- [ ] 표현 완료 처리 (user_expression_progress 테이블에 저장)
-- [ ] 세션 완료 처리 (user_session_progress 테이블 업데이트)
-- [ ] 일별 통계 업데이트 (daily_study_stats)
-- [ ] Next Session 버튼 기능 구현 (다음 세션으로 이동)
-- [ ] 진행률 실시간 업데이트 (HomeScreen, CategoryScreen)
+### Phase 2 완료! 🎉
+
+**진행 상황 업데이트 기능 완료:**
+- [x] 표현 완료 처리 (user_expression_progress 테이블에 저장)
+- [x] 세션 완료 처리 (user_session_progress 테이블 업데이트)
+- [x] 일별 통계 업데이트 (daily_study_stats)
+- [x] Next Session 버튼 기능 구현 (다음 세션으로 이동)
+- [x] 진행률 실시간 업데이트 (HomeScreen, CategoryScreen)
 
 ### Phase 2 추가 화면 연동
 - [ ] CalendarScreen - 월별 학습 통계
@@ -56,21 +58,38 @@
 - [x] MP3 파일 10개 업로드 (Daily Expression)
 - [x] AudioPlayer 실제 오디오 재생 구현
 
+### ✅ Phase 2 추가: 진행 상황 업데이트 기능
+
+**7. 진행 상황 추적 시스템**
+- [x] useProgress hook 생성 (completeExpression, completeSession, updateDailyStats)
+- [x] 표현 완료 처리 (user_expression_progress)
+- [x] 세션 완료 처리 (user_session_progress)
+- [x] 일별 통계 업데이트 (daily_study_stats)
+- [x] Next Session 버튼 기능 (다음 세션 자동 이동)
+- [x] 진행률 실시간 업데이트 (HomeScreen, CategoryScreen)
+
+**8. 데이터베이스 마이그레이션**
+- [x] 004_add_progress_columns.sql - 필수 컬럼 추가
+- [x] 005_update_rls_policies.sql - RLS 정책 업데이트
+- [x] 006_create_test_user.sql - 테스트 사용자 생성
+- [x] 007_update_functions.sql - get_categories_with_progress 함수
+- [x] 999_reset_test_data.sql - 테스트 데이터 초기화 유틸리티
+
 ## 🐛 Phase 4: 품질 개선
 
-### 7. 에러 처리 및 UX
+### 9. 에러 처리 및 UX
 - [ ] 로딩 상태 UI 추가
 - [ ] 에러 핸들링 추가
 - [ ] 네트워크 에러 처리
 
-### 8. 테스트
+### 10. 테스트
 - [ ] 각 화면 동작 테스트
 - [ ] 진행 상황 업데이트 테스트
 - [ ] 버그 수정
 
 ## 🚀 Phase 5: 배포 준비
 
-### 9. 배포 설정
+### 11. 배포 설정
 - [ ] Vercel 배포 설정
 - [ ] 프로덕션 환경 변수 설정
 - [ ] 배포 테스트
@@ -82,3 +101,28 @@
 - **콘텐츠 준비**: 영어 표현, 한글 번역, 음성 파일은 별도로 준비 필요
 - **백엔드 전략**: Phase 1-2는 Supabase 직접 호출, 나중에 필요시 Hybrid로 전환
 - **코드 품질**: 모든 파일 300줄 이하 유지
+
+## 🔧 개발 환경 설정
+
+### 테스트 사용자 정보
+```
+UUID: 00000000-0000-0000-0000-000000000001
+Email: test@example.com
+```
+
+### 진행 상황 초기화
+```sql
+-- supabase/migrations/999_reset_test_data.sql 실행
+DELETE FROM user_expression_progress WHERE user_id = '00000000-0000-0000-0000-000000000001';
+DELETE FROM user_session_progress WHERE user_id = '00000000-0000-0000-0000-000000000001';
+DELETE FROM daily_study_stats WHERE user_id = '00000000-0000-0000-0000-000000000001';
+```
+
+### 마이그레이션 실행 순서
+1. 001_initial_schema.sql
+2. 002_storage_policies.sql
+3. 003_allow_anon_upload.sql
+4. 004_add_progress_columns.sql
+5. 005_update_rls_policies.sql
+6. 006_create_test_user.sql
+7. 007_update_functions.sql

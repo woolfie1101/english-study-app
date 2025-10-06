@@ -98,11 +98,196 @@ export function useProgress() {
     }
   };
 
+  /**
+   * 세션 완료 처리
+   * user_session_progress 테이블 업데이트
+   */
+  const completeSession = async (
+    userId: string,
+    sessionId: string,
+    categoryId: string
+  ) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Check if progress record exists
+      const { data: existing } = await supabase
+        .from('user_session_progress')
+        .select('id, status')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing record
+        const { data, error } = await supabase
+          .from('user_session_progress')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Insert new record
+        const { data, error } = await supabase
+          .from('user_session_progress')
+          .insert({
+            user_id: userId,
+            session_id: sessionId,
+            category_id: categoryId,
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * 세션 진행 상황 조회
+   */
+  const getSessionProgress = async (
+    userId: string,
+    sessionId: string
+  ) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_session_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error('Error fetching session progress:', err);
+      return null;
+    }
+  };
+
+  /**
+   * 일별 통계 업데이트
+   * daily_study_stats 테이블 업데이트
+   */
+  const updateDailyStats = async (
+    userId: string,
+    categoryId: string,
+    expressionsCompleted: number = 1
+  ) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+      // Check if today's stats exist
+      const { data: existing } = await supabase
+        .from('daily_study_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('study_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing stats
+        const { data, error } = await supabase
+          .from('daily_study_stats')
+          .update({
+            sessions_completed: existing.sessions_completed + 1,
+            expressions_completed: existing.expressions_completed + expressionsCompleted,
+            study_time_minutes: existing.study_time_minutes + 5, // Assume 5 minutes per session
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Insert new stats
+        const { data, error } = await supabase
+          .from('daily_study_stats')
+          .insert({
+            user_id: userId,
+            category_id: categoryId,
+            study_date: today,
+            sessions_completed: 1,
+            expressions_completed: expressionsCompleted,
+            study_time_minutes: 5, // Assume 5 minutes per session
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * 일별 통계 조회
+   */
+  const getDailyStats = async (
+    userId: string,
+    startDate?: string,
+    endDate?: string
+  ) => {
+    try {
+      let query = supabase
+        .from('daily_study_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .order('study_date', { ascending: false });
+
+      if (startDate) {
+        query = query.gte('study_date', startDate);
+      }
+      if (endDate) {
+        query = query.lte('study_date', endDate);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error('Error fetching daily stats:', err);
+      return [];
+    }
+  };
+
   return {
     loading,
     error,
     completeExpression,
     getCompletedExpressions,
     isExpressionCompleted,
+    completeSession,
+    getSessionProgress,
+    updateDailyStats,
+    getDailyStats,
   };
 }
