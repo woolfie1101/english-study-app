@@ -102,11 +102,13 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
   };
 
   const allCompleted = expressionsWithStatus.every(exp => exp.completed);
+  const [sessionCompleted, setSessionCompleted] = React.useState(false);
 
   // Auto-complete session when all expressions are completed
   useEffect(() => {
     const handleSessionCompletion = async () => {
-      if (allCompleted && expressionsWithStatus.length > 0) {
+      // Only complete once
+      if (allCompleted && expressionsWithStatus.length > 0 && !sessionCompleted) {
         try {
           // Complete session
           await completeSession(userId, session.id, category.id);
@@ -115,10 +117,12 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
           // Update daily stats
           await updateDailyStats(
             userId,
-            category.id,
-            expressionsWithStatus.length
+            category.id
           );
           console.log('Daily stats updated successfully');
+
+          // Mark as completed to prevent duplicate calls
+          setSessionCompleted(true);
         } catch (error) {
           console.error('Failed to complete session:', error);
         }
@@ -126,7 +130,7 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
     };
 
     handleSessionCompletion();
-  }, [allCompleted, expressionsWithStatus.length]);
+  }, [allCompleted, expressionsWithStatus.length, sessionCompleted]);
 
   const handleNextSession = async () => {
     try {
@@ -137,9 +141,9 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
         // Navigate to next session
         router.push(`/category/${category.id}/session/${nextSessionNumber}`);
       } else {
-        // No more sessions, go back to category
+        // No more sessions, go to home
         alert('Congratulations! You completed all sessions in this category.');
-        router.back();
+        router.push('/');
       }
     } catch (error) {
       console.error('Failed to load next session:', error);

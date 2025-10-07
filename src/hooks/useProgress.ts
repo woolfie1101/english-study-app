@@ -188,40 +188,61 @@ export function useProgress() {
    */
   const updateDailyStats = async (
     userId: string,
-    categoryId: string,
-    expressionsCompleted: number = 1
+    categoryId: string
   ) => {
     setLoading(true);
     setError(null);
 
     try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      // Use local timezone to avoid date shift
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`; // YYYY-MM-DD in local timezone
 
-      // Check if today's stats exist
+      console.log('=== Daily Stats Update ===');
+      console.log('Current Date Object:', now);
+      console.log('Formatted Date (Local):', today);
+      console.log('ISO String:', now.toISOString());
+
+      // Get total sessions for this category
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('total_sessions')
+        .eq('id', categoryId)
+        .single();
+
+      const totalSessions = categoryData?.total_sessions || 0;
+
+      // Check if today's stats exist for this category
       const { data: existing } = await supabase
         .from('daily_study_stats')
         .select('*')
         .eq('user_id', userId)
         .eq('study_date', today)
+        .eq('category_id', categoryId)
         .maybeSingle();
 
       if (existing) {
         // Update existing stats
+        console.log('Updating existing stats for:', today);
         const { data, error } = await supabase
           .from('daily_study_stats')
           .update({
             sessions_completed: existing.sessions_completed + 1,
-            expressions_completed: existing.expressions_completed + expressionsCompleted,
-            study_time_minutes: existing.study_time_minutes + 5, // Assume 5 minutes per session
+            total_sessions: totalSessions,
           })
           .eq('id', existing.id)
           .select()
           .single();
 
         if (error) throw error;
+        console.log('Updated stats:', data);
         return data;
       } else {
         // Insert new stats
+        console.log('Inserting new stats for:', today);
         const { data, error } = await supabase
           .from('daily_study_stats')
           .insert({
@@ -229,13 +250,13 @@ export function useProgress() {
             category_id: categoryId,
             study_date: today,
             sessions_completed: 1,
-            expressions_completed: expressionsCompleted,
-            study_time_minutes: 5, // Assume 5 minutes per session
+            total_sessions: totalSessions,
           })
           .select()
           .single();
 
         if (error) throw error;
+        console.log('Inserted stats:', data);
         return data;
       }
     } catch (err) {

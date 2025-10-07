@@ -5,25 +5,28 @@ import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-interface DayStatus {
-  date: number;
-  status: 'completed' | 'partial' | 'not-studied';
-  percentage?: number;
-  breakdown?: {
-    'Daily Expression': { completed: number; total: number };
-    'Pattern': { completed: number; total: number };
-    'Grammar': { completed: number; total: number };
-  };
-}
+import { useCalendar, CalendarDayData } from "@/hooks/useCalendar";
 
 export function CalendarScreen() {
-  const [currentDate, setCurrentDate] = useState<Date | null>(null);
-  const [selectedDay, setSelectedDay] = useState<DayStatus | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<CalendarDayData | null>(null);
+
+  // Initialize with null to prevent hydration mismatch
+  const [year, setYear] = useState<number | null>(null);
+  const [month, setMonth] = useState<number | null>(null);
 
   useEffect(() => {
-    setCurrentDate(new Date());
+    // Set date only on client side
+    const now = new Date();
+    setYear(now.getFullYear());
+    setMonth(now.getMonth() + 1);
+    setMounted(true);
   }, []);
+
+  const { monthData, loading, error } = useCalendar(
+    year || new Date().getFullYear(),
+    month || new Date().getMonth() + 1
+  );
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -32,64 +35,24 @@ export function CalendarScreen() {
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // Mock data for the calendar
-  const generateMockData = (): DayStatus[] => {
-    if (!currentDate) return [];
-
-    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-    const today = new Date().getDate();
-
-    return Array.from({ length: daysInMonth }, (_, i) => {
-      const day = i + 1;
-      if (day < today - 5) {
-        return {
-          date: day,
-          status: 'completed' as const,
-          percentage: 100,
-          breakdown: {
-            'Daily Expression': { completed: 2, total: 2 },
-            'Pattern': { completed: 1, total: 1 },
-            'Grammar': { completed: 1, total: 1 }
-          }
-        };
-      } else if (day < today) {
-        return {
-          date: day,
-          status: 'partial' as const,
-          percentage: 60,
-          breakdown: {
-            'Daily Expression': { completed: 2, total: 2 },
-            'Pattern': { completed: 1, total: 1 },
-            'Grammar': { completed: 0, total: 1 }
-          }
-        };
-      }
-      return {
-        date: day,
-        status: 'not-studied' as const,
-        percentage: 0
-      };
-    });
-  };
-
-  const monthData = generateMockData();
-  const firstDayOfMonth = currentDate ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay() : 0;
+  const firstDayOfMonth = year && month ? new Date(year, month - 1, 1).getDay() : 0;
 
   const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(prev => {
-      if (!prev) return new Date();
-      const newDate = new Date(prev);
-      if (direction === 'prev') {
-        newDate.setMonth(prev.getMonth() - 1);
-      } else {
-        newDate.setMonth(prev.getMonth() + 1);
-      }
-      return newDate;
-    });
+    if (!year || !month) return;
+
+    const currentDate = new Date(year, month - 1, 1);
+    if (direction === 'prev') {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    } else {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    setYear(currentDate.getFullYear());
+    setMonth(currentDate.getMonth() + 1);
     setSelectedDay(null);
   };
 
-  const handleDayClick = (dayData: DayStatus) => {
+  const handleDayClick = (dayData: CalendarDayData) => {
     if (dayData.status !== 'not-studied') {
       setSelectedDay(dayData);
     }
@@ -106,7 +69,7 @@ export function CalendarScreen() {
     }
   };
 
-  const getStatusIndicator = (dayData: DayStatus) => {
+  const getStatusIndicator = (dayData: CalendarDayData) => {
     switch (dayData.status) {
       case 'completed':
         return '✅';
@@ -117,10 +80,18 @@ export function CalendarScreen() {
     }
   };
 
-  if (!currentDate) {
+  if (!mounted || loading) {
     return (
       <div className="flex-1 bg-background flex items-center justify-center">
         <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 bg-background flex items-center justify-center">
+        <div className="text-red-500">Error loading calendar data</div>
       </div>
     );
   }
@@ -138,7 +109,7 @@ export function CalendarScreen() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <h2 className="text-xl">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          {year && month ? `${monthNames[month - 1]} ${year}` : ''}
         </h2>
         <Button variant="ghost" size="sm" onClick={() => navigateMonth('next')}>
           <ChevronRight className="w-5 h-5" />
@@ -166,22 +137,30 @@ export function CalendarScreen() {
             ))}
             
             {/* Days of the month */}
-            {monthData.map((dayData) => (
-              <div
-                key={dayData.date}
-                onClick={() => handleDayClick(dayData)}
-                className={`
-                  p-2 text-center cursor-pointer rounded-lg transition-colors
-                  ${getStatusColor(dayData.status)}
-                  ${dayData.status !== 'not-studied' ? 'hover:opacity-80' : 'cursor-not-allowed'}
-                `}
-              >
-                <div className="text-sm">{dayData.date}</div>
-                <div className="text-xs mt-1">
-                  {getStatusIndicator(dayData)}
+            {monthData.map((dayData) => {
+              const today = new Date();
+              const isToday = dayData.studyDate.getDate() === today.getDate() &&
+                             dayData.studyDate.getMonth() === today.getMonth() &&
+                             dayData.studyDate.getFullYear() === today.getFullYear();
+
+              return (
+                <div
+                  key={dayData.date}
+                  onClick={() => handleDayClick(dayData)}
+                  className={`
+                    p-2 text-center cursor-pointer rounded-lg transition-colors
+                    ${getStatusColor(dayData.status)}
+                    ${dayData.status !== 'not-studied' ? 'hover:opacity-80' : 'cursor-not-allowed'}
+                    ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                  `}
+                >
+                  <div className="text-sm font-medium">{dayData.studyDate.getDate()}</div>
+                  <div className="text-xs mt-1">
+                    {getStatusIndicator(dayData)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       </div>
@@ -211,20 +190,27 @@ export function CalendarScreen() {
         <div className="px-6 pb-6">
           <Card className="p-4">
             <h3 className="mb-3">
-              {monthNames[currentDate.getMonth()]} {selectedDay.date}, {currentDate.getFullYear()}
+              {monthNames[selectedDay.studyDate.getMonth()]} {selectedDay.studyDate.getDate()}, {selectedDay.studyDate.getFullYear()}
             </h3>
+            <div className="mb-3 text-sm text-muted-foreground">
+              Total: {selectedDay.sessionsCompleted}/{selectedDay.totalSessions} sessions ({selectedDay.percentage}%)
+            </div>
             <div className="space-y-2">
-              {selectedDay.breakdown && Object.entries(selectedDay.breakdown).map(([category, data]) => {
-                const percentage = data.total > 0 ? (data.completed / data.total) * 100 : 0;
-                return (
-                  <div key={category} className="flex justify-between items-center">
-                    <span className="text-sm">{category}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {data.completed}/{data.total} ({percentage.toFixed(0)}%)
-                    </span>
-                  </div>
-                );
-              })}
+              {selectedDay.categoryBreakdown.length > 0 ? (
+                selectedDay.categoryBreakdown.map((category) => {
+                  const percentage = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
+                  return (
+                    <div key={category.categoryId} className="flex justify-between items-center">
+                      <span className="text-sm">{category.categoryName}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {category.completed}/{category.total} ({percentage}%)
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-sm text-muted-foreground">No study data for this day</div>
+              )}
             </div>
           </Card>
         </div>

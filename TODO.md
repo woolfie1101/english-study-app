@@ -20,7 +20,7 @@
 - [x] 진행률 실시간 업데이트 (HomeScreen, CategoryScreen)
 
 ### Phase 2 추가 화면 연동
-- [ ] CalendarScreen - 월별 학습 통계
+- [x] CalendarScreen - 월별 학습 통계 (useCalendar hook, 실시간 데이터 연동)
 - [ ] SettingsScreen - 사용자 설정
 
 ---

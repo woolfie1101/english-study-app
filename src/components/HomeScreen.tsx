@@ -9,17 +9,19 @@ import { CircularProgress } from "./CircularProgress";
 import { useCategories } from "@/hooks/useCategories";
 
 export function HomeScreen() {
-  const [today, setToday] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
   const { categories, loading, error } = useCategories();
 
   useEffect(() => {
-    setToday(new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }));
+    setMounted(true);
   }, []);
+
+  const today = mounted ? new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }) : '';
 
   // Calculate overall progress from categories
   const overallProgress = React.useMemo(() => {
