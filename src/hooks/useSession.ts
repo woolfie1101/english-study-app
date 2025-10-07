@@ -4,9 +4,11 @@ import { Database } from '@/types/database'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type Expression = Database['public']['Tables']['expressions']['Row']
+type Category = Database['public']['Tables']['categories']['Row']
 
 interface SessionWithExpressions extends Session {
   expressions: Expression[]
+  category?: Category
 }
 
 export function useSession(categoryId: string, sessionNumber: number) {
@@ -19,10 +21,10 @@ export function useSession(categoryId: string, sessionNumber: number) {
       try {
         setLoading(true)
 
-        // Fetch session
+        // Fetch session with category
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
-          .select('*')
+          .select('*, categories(*)')
           .eq('category_id', categoryId)
           .eq('session_number', sessionNumber)
           .single()
@@ -42,9 +44,19 @@ export function useSession(categoryId: string, sessionNumber: number) {
 
         if (expressionsError) throw expressionsError
 
+        // Add category slug to audio URLs (AudioPlayer will construct full URL)
+        const category = (sessionData as any).categories as Category
+        const categorySlug = category?.slug || 'daily-expression'
+
+        const expressionsWithPaths = expressionsData?.map(exp => ({
+          ...exp,
+          audio_url: exp.audio_url ? `${categorySlug}/${exp.audio_url}` : null
+        })) || []
+
         const sessionWithExpressions: SessionWithExpressions = {
           ...sessionData,
-          expressions: expressionsData || []
+          expressions: expressionsWithPaths,
+          category
         }
 
         setSession(sessionWithExpressions)

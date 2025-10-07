@@ -13,6 +13,7 @@ export interface Database {
         Row: {
           id: string
           name: string
+          slug: string | null
           display_order: number | null
           total_sessions: number
           icon: string | null
@@ -22,6 +23,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
+          slug?: string | null
           display_order?: number | null
           total_sessions?: number
           icon?: string | null
@@ -31,6 +33,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
+          slug?: string | null
           display_order?: number | null
           total_sessions?: number
           icon?: string | null
@@ -47,6 +50,7 @@ export interface Database {
           pattern_english: string | null
           pattern_korean: string | null
           description: string | null
+          metadata: Json
           created_at: string
           updated_at: string
         }
@@ -58,6 +62,7 @@ export interface Database {
           pattern_english?: string | null
           pattern_korean?: string | null
           description?: string | null
+          metadata?: Json
           created_at?: string
           updated_at?: string
         }
@@ -69,6 +74,7 @@ export interface Database {
           pattern_english?: string | null
           pattern_korean?: string | null
           description?: string | null
+          metadata?: Json
           created_at?: string
           updated_at?: string
         }
@@ -81,6 +87,7 @@ export interface Database {
           english: string
           korean: string
           audio_url: string | null
+          metadata: Json
           created_at: string
           updated_at: string
         }
@@ -91,6 +98,7 @@ export interface Database {
           english: string
           korean: string
           audio_url?: string | null
+          metadata?: Json
           created_at?: string
           updated_at?: string
         }
@@ -101,6 +109,7 @@ export interface Database {
           english?: string
           korean?: string
           audio_url?: string | null
+          metadata?: Json
           created_at?: string
           updated_at?: string
         }
