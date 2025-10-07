@@ -192,7 +192,9 @@ export interface Database {
           user_id: string
           auto_play_audio: boolean
           daily_reminder: boolean
+          daily_goal: number
           dark_mode: boolean
+          reminder_time: string
           created_at: string
           updated_at: string
         }
@@ -201,7 +203,9 @@ export interface Database {
           user_id: string
           auto_play_audio?: boolean
           daily_reminder?: boolean
+          daily_goal?: number
           dark_mode?: boolean
+          reminder_time?: string
           created_at?: string
           updated_at?: string
         }
@@ -210,7 +214,9 @@ export interface Database {
           user_id?: string
           auto_play_audio?: boolean
           daily_reminder?: boolean
+          daily_goal?: number
           dark_mode?: boolean
+          reminder_time?: string
           created_at?: string
           updated_at?: string
         }

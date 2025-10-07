@@ -21,7 +21,7 @@
 
 ### Phase 2 추가 화면 연동
 - [x] CalendarScreen - 월별 학습 통계 (useCalendar hook, 실시간 데이터 연동)
-- [ ] SettingsScreen - 사용자 설정
+- [x] SettingsScreen - 사용자 설정 (useSettings hook, user_settings 테이블)
 
 ---
 
@@ -73,23 +73,29 @@
 - [x] 005_update_rls_policies.sql - RLS 정책 업데이트
 - [x] 006_create_test_user.sql - 테스트 사용자 생성
 - [x] 007_update_functions.sql - get_categories_with_progress 함수
+- [x] 008_create_user_settings.sql - user_settings 테이블 생성
 - [x] 999_reset_test_data.sql - 테스트 데이터 초기화 유틸리티
+
+**9. SettingsScreen 구현**
+- [x] useSettings hook 생성 (설정 CRUD, 진행 상황 초기화)
+- [x] UI 업데이트 (Auto-play, Reminder, Daily goal, Dark mode, Reminder time)
+- [x] 진행 상황 초기화 기능 (Reset Progress with confirmation modal)
 
 ## 🐛 Phase 4: 품질 개선
 
-### 9. 에러 처리 및 UX
+### 10. 에러 처리 및 UX
 - [ ] 로딩 상태 UI 추가
 - [ ] 에러 핸들링 추가
 - [ ] 네트워크 에러 처리
 
-### 10. 테스트
+### 11. 테스트
 - [ ] 각 화면 동작 테스트
 - [ ] 진행 상황 업데이트 테스트
 - [ ] 버그 수정
 
 ## 🚀 Phase 5: 배포 준비
 
-### 11. 배포 설정
+### 12. 배포 설정
 - [ ] Vercel 배포 설정
 - [ ] 프로덕션 환경 변수 설정
 - [ ] 배포 테스트
@@ -126,3 +132,4 @@ DELETE FROM daily_study_stats WHERE user_id = '00000000-0000-0000-0000-000000000
 5. 005_update_rls_policies.sql
 6. 006_create_test_user.sql
 7. 007_update_functions.sql
+8. 008_create_user_settings.sql
