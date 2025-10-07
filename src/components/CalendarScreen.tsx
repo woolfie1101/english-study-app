@@ -28,6 +28,23 @@ export function CalendarScreen() {
     month || new Date().getMonth() + 1
   );
 
+  // Set today as default selected day when data loads
+  useEffect(() => {
+    if (monthData.length > 0 && !selectedDay) {
+      const today = new Date();
+      const todayData = monthData.find(day =>
+        day.studyDate.getDate() === today.getDate() &&
+        day.studyDate.getMonth() === today.getMonth() &&
+        day.studyDate.getFullYear() === today.getFullYear()
+      );
+
+      // Only set if today has study data
+      if (todayData && todayData.status !== 'not-studied') {
+        setSelectedDay(todayData);
+      }
+    }
+  }, [monthData]);
+
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -143,15 +160,18 @@ export function CalendarScreen() {
                              dayData.studyDate.getMonth() === today.getMonth() &&
                              dayData.studyDate.getFullYear() === today.getFullYear();
 
+              const isSelected = selectedDay?.date === dayData.date;
+
               return (
                 <div
                   key={dayData.date}
                   onClick={() => handleDayClick(dayData)}
                   className={`
-                    p-2 text-center cursor-pointer rounded-lg transition-colors
+                    p-2 text-center cursor-pointer rounded-lg transition-colors relative
                     ${getStatusColor(dayData.status)}
                     ${dayData.status !== 'not-studied' ? 'hover:opacity-80' : 'cursor-not-allowed'}
                     ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                    ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}
                   `}
                 >
                   <div className="text-sm font-medium">{dayData.studyDate.getDate()}</div>
