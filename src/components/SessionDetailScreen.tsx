@@ -178,6 +178,16 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
             <p className="text-lg text-blue-900">{mainPattern.english}</p>
             <p className="text-lg text-blue-700">{mainPattern.korean}</p>
           </div>
+
+          {/* Pattern Description - from session */}
+          {session.description && (
+            <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-200">
+              <div className="flex items-start space-x-2">
+                <span className="text-blue-600 font-semibold text-sm">💡</span>
+                <p className="text-sm text-blue-800 leading-relaxed">{session.description}</p>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Expression Cards */}

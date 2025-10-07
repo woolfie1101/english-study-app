@@ -46,6 +46,7 @@ export interface Database {
           title: string
           pattern_english: string | null
           pattern_korean: string | null
+          description: string | null
           created_at: string
           updated_at: string
         }
@@ -56,6 +57,7 @@ export interface Database {
           title: string
           pattern_english?: string | null
           pattern_korean?: string | null
+          description?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -66,6 +68,7 @@ export interface Database {
           title?: string
           pattern_english?: string | null
           pattern_korean?: string | null
+          description?: string | null
           created_at?: string
           updated_at?: string
         }
