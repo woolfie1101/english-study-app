@@ -97,6 +97,22 @@ export function useCalendar(
 
         const percentage = totalSessions > 0 ? Math.round((totalCompleted / totalSessions) * 100) : 0;
 
+        // Debug: Log percentage for today
+        const today = new Date();
+        const isToday = currentDate.getDate() === today.getDate() &&
+                       currentDate.getMonth() === today.getMonth() &&
+                       currentDate.getFullYear() === today.getFullYear();
+
+        if (isToday && dayStats.length > 0) {
+          console.log('Today Calendar Data:', {
+            date: dateStr,
+            totalCompleted,
+            totalSessions,
+            percentage,
+            stats: dayStats
+          });
+        }
+
         // Determine status
         let status: 'completed' | 'partial' | 'not-studied' = 'not-studied';
         if (percentage === 100) {

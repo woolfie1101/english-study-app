@@ -215,6 +215,24 @@ export function useProgress() {
 
       const totalSessions = categoryData?.total_sessions || 0;
 
+      // Count actual completed sessions for this category on this date
+      const { data: completedSessions, error: countError } = await supabase
+        .from('user_session_progress')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('category_id', categoryId)
+        .eq('status', 'completed')
+        .not('completed_at', 'is', null);
+
+      if (countError) throw countError;
+
+      const actualCompletedCount = completedSessions?.length || 0;
+
+      console.log('=== Calculating Actual Completed Count ===');
+      console.log('Category ID:', categoryId);
+      console.log('Actual Completed Sessions:', actualCompletedCount);
+      console.log('Total Sessions:', totalSessions);
+
       // Check if today's stats exist for this category
       const { data: existing } = await supabase
         .from('daily_study_stats')
@@ -225,12 +243,12 @@ export function useProgress() {
         .maybeSingle();
 
       if (existing) {
-        // Update existing stats
+        // Update existing stats with actual count
         console.log('Updating existing stats for:', today);
         const { data, error } = await supabase
           .from('daily_study_stats')
           .update({
-            sessions_completed: existing.sessions_completed + 1,
+            sessions_completed: actualCompletedCount,
             total_sessions: totalSessions,
           })
           .eq('id', existing.id)
@@ -249,7 +267,7 @@ export function useProgress() {
             user_id: userId,
             category_id: categoryId,
             study_date: today,
-            sessions_completed: 1,
+            sessions_completed: actualCompletedCount,
             total_sessions: totalSessions,
           })
           .select()
