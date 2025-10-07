@@ -9,16 +9,17 @@ export function BottomNavigation() {
 
   const tabs = [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
-    { id: 'categories', label: 'Categories', icon: BookOpen, href: '/' },
+    { id: 'categories', label: 'Categories', icon: BookOpen, href: '/categories' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/calendar' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/settings' }
   ];
 
   const getActiveTab = () => {
     if (pathname === '/') return 'home';
+    if (pathname === '/categories') return 'categories';
     if (pathname === '/calendar') return 'calendar';
     if (pathname === '/settings') return 'settings';
-    if (pathname?.startsWith('/category')) return 'home';
+    if (pathname?.startsWith('/category')) return 'categories';
     return 'home';
   };
 
