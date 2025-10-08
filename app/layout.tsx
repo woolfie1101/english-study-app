@@ -1,4 +1,5 @@
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
           </div>
           <BottomNavigation />
         </div>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

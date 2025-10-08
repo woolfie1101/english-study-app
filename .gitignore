@@ -88,3 +88,6 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+
+# Google Cloud
+.gen-lang-client-0458093252-d1cf1f15e2b5.json
