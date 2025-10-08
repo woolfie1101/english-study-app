@@ -11,7 +11,7 @@ interface SessionWithExpressions extends Session {
   category?: Category
 }
 
-export function useSession(categoryId: string, sessionNumber: number) {
+export function useSession(slug: string, sessionNumber: number) {
   const [session, setSession] = useState<SessionWithExpressions | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -21,11 +21,24 @@ export function useSession(categoryId: string, sessionNumber: number) {
       try {
         setLoading(true)
 
+        // First get category by slug
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('slug', slug)
+          .single()
+
+        if (categoryError) throw categoryError
+        if (!categoryData) {
+          setSession(null)
+          return
+        }
+
         // Fetch session with category
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .select('*, categories(*)')
-          .eq('category_id', categoryId)
+          .eq('category_id', categoryData.id)
           .eq('session_number', sessionNumber)
           .single()
 
@@ -69,7 +82,7 @@ export function useSession(categoryId: string, sessionNumber: number) {
     }
 
     fetchSession()
-  }, [categoryId, sessionNumber])
+  }, [slug, sessionNumber])
 
   return { session, loading, error }
 }

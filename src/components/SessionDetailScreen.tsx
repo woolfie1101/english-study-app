@@ -139,7 +139,7 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
 
       if (nextSessionNumber) {
         // Navigate to next session
-        router.push(`/category/${category.id}/session/${nextSessionNumber}`);
+        router.push(`/category/${category.slug}/session/${nextSessionNumber}`);
       } else {
         // No more sessions, go to home
         alert('Congratulations! You completed all sessions in this category.');

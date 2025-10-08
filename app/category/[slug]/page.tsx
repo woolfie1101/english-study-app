@@ -8,9 +8,9 @@ import { useCategory } from "@/hooks/useCategory";
 export default function CategoryPage() {
   const params = useParams();
   const router = useRouter();
-  const categoryId = params.id as string;
+  const slug = params.slug as string;
 
-  const { category, loading, error } = useCategory(categoryId);
+  const { category, loading, error } = useCategory(slug);
 
   useEffect(() => {
     if (!loading && !category && !error) {

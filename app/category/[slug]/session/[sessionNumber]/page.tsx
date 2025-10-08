@@ -9,19 +9,19 @@ import { useCategory } from "@/hooks/useCategory";
 export default function SessionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const categoryId = params.id as string;
+  const slug = params.slug as string;
   const sessionNumber = parseInt(params.sessionNumber as string);
 
-  const { category, loading: categoryLoading } = useCategory(categoryId);
-  const { session, loading: sessionLoading, error } = useSession(categoryId, sessionNumber);
+  const { category, loading: categoryLoading } = useCategory(slug);
+  const { session, loading: sessionLoading, error } = useSession(slug, sessionNumber);
 
   const loading = categoryLoading || sessionLoading;
 
   useEffect(() => {
     if (!loading && !session && !error) {
-      router.push(`/category/${categoryId}`);
+      router.push(`/category/${slug}`);
     }
-  }, [loading, session, error, router, categoryId]);
+  }, [loading, session, error, router, slug]);
 
   if (loading) {
     return (

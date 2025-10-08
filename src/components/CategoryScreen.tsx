@@ -103,7 +103,7 @@ export function CategoryScreen({ category }: CategoryScreenProps) {
             );
 
             return session.status !== 'locked' ? (
-              <Link key={session.id} href={`/category/${category.id}/session/${session.session_number}`}>
+              <Link key={session.id} href={`/category/${category.slug}/session/${session.session_number}`}>
                 {SessionContent}
               </Link>
             ) : (

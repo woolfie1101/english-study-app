@@ -10,7 +10,7 @@ interface CategoryWithSessions extends Category {
   completed: number
 }
 
-export function useCategory(categoryId: string, userId: string = '00000000-0000-0000-0000-000000000001') {
+export function useCategory(slug: string, userId: string = '00000000-0000-0000-0000-000000000001') {
   const [category, setCategory] = useState<CategoryWithSessions | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -19,11 +19,11 @@ export function useCategory(categoryId: string, userId: string = '00000000-0000-
     try {
       setLoading(true)
 
-      // Fetch category
+      // Fetch category by slug
       const { data: categoryData, error: categoryError } = await supabase
         .from('categories')
         .select('*')
-        .eq('id', categoryId)
+        .eq('slug', slug)
         .single()
 
       if (categoryError) throw categoryError
@@ -36,7 +36,7 @@ export function useCategory(categoryId: string, userId: string = '00000000-0000-
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('sessions')
         .select('*')
-        .eq('category_id', categoryId)
+        .eq('category_id', categoryData.id)
         .order('session_number')
 
       if (sessionsError) throw sessionsError
@@ -46,7 +46,7 @@ export function useCategory(categoryId: string, userId: string = '00000000-0000-
         .from('user_session_progress')
         .select('session_id, status')
         .eq('user_id', userId)
-        .eq('category_id', categoryId)
+        .eq('category_id', categoryData.id)
         .eq('status', 'completed')
 
       if (progressError) throw progressError
@@ -71,7 +71,7 @@ export function useCategory(categoryId: string, userId: string = '00000000-0000-
 
   useEffect(() => {
     fetchCategory()
-  }, [categoryId, userId])
+  }, [slug, userId])
 
   // Return refetch function for manual refresh
   return { category, loading, error, refetch: fetchCategory }

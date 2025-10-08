@@ -55,7 +55,7 @@ export function CategoriesScreen() {
                     {category.percentage}% complete
                   </div>
                 </div>
-                <Link href={`/category/${category.id}`}>
+                <Link href={`/category/${category.slug}`}>
                   <Button
                     className="ml-4 bg-green-500 hover:bg-green-600 text-white"
                   >

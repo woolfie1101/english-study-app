@@ -28,13 +28,15 @@ export function useCategories(userId: string = '00000000-0000-0000-0000-00000000
       const categoriesWithProgress: CategoryWithProgress[] = (data || []).map((row: any) => ({
         id: row.category_id,
         name: row.category_name,
+        slug: row.slug,
         description: null,
         display_order: row.display_order,
         total_sessions: Number(row.total_sessions),
         completed: Number(row.completed_sessions),
         percentage: Number(row.percentage),
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        metadata: null
       }))
 
       setCategories(categoriesWithProgress)
