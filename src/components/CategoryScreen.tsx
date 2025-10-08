@@ -25,6 +25,7 @@ interface CategoryScreenProps {
     total_sessions: number;
     sessions: Session[];
   };
+  onRefetch?: () => void;
 }
 
 // Map category slug to Google Sheet name
@@ -32,7 +33,7 @@ const SHEET_NAME_MAP: Record<string, string> = {
   'daily-expression': 'DailyExpression'
 };
 
-export function CategoryScreen({ category }: CategoryScreenProps) {
+export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -67,8 +68,12 @@ export function CategoryScreen({ category }: CategoryScreenProps) {
         duration: 3000,
       });
 
-      // Refresh the page to show new data - using window.location for full reload
-      window.location.reload();
+      // Refetch data without page reload
+      if (onRefetch) {
+        setTimeout(() => {
+          onRefetch();
+        }, 1000); // Wait 1 second to show the toast
+      }
     } catch (error) {
       console.error('Sync error:', error);
       toast.error('동기화 실패', {
@@ -117,7 +122,7 @@ export function CategoryScreen({ category }: CategoryScreenProps) {
         <Card className="p-4">
           <div className="text-center">
             <div className="text-2xl font-medium mb-1 text-gray-900">
-              {category.completed}/{category.total_sessions}
+              {category.completed}/{category.sessions.length}
             </div>
             <div className="text-sm text-gray-600">
               Sessions Completed

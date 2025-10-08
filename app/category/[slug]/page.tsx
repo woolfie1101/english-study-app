@@ -10,7 +10,7 @@ export default function CategoryPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const { category, loading, error } = useCategory(slug);
+  const { category, loading, error, refetch } = useCategory(slug);
 
   useEffect(() => {
     if (!loading && !category && !error) {
@@ -38,5 +38,5 @@ export default function CategoryPage() {
     return null;
   }
 
-  return <CategoryScreen category={category} />;
+  return <CategoryScreen category={category} onRefetch={refetch} />;
 }

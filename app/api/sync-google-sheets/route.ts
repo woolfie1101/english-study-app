@@ -172,6 +172,51 @@ export async function POST(request: Request) {
       }
     }
 
+    // Update daily_study_stats after syncing
+    if (syncedCount > 0) {
+      try {
+        // Get all categories with their session counts
+        const { data: categories, error: categoriesError } = await supabaseAdmin
+          .from('categories')
+          .select('id');
+
+        if (categoriesError) throw categoriesError;
+
+        // Update stats for each category
+        for (const cat of categories || []) {
+          // Get total sessions for this category
+          const { count: totalSessions } = await supabaseAdmin
+            .from('sessions')
+            .select('*', { count: 'exact', head: true })
+            .eq('category_id', cat.id);
+
+          // Get completed sessions for this category
+          const { count: completedSessions } = await supabaseAdmin
+            .from('user_session_progress')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', '00000000-0000-0000-0000-000000000001')
+            .eq('category_id', cat.id)
+            .eq('status', 'completed');
+
+          // Upsert daily stats for today
+          await supabaseAdmin
+            .from('daily_study_stats')
+            .upsert({
+              user_id: '00000000-0000-0000-0000-000000000001',
+              category_id: cat.id,
+              study_date: new Date().toISOString().split('T')[0],
+              sessions_completed: completedSessions || 0,
+              total_sessions: totalSessions || 0
+            }, {
+              onConflict: 'user_id,category_id,study_date'
+            });
+        }
+      } catch (statsError) {
+        console.error('Error updating daily stats:', statsError);
+        // Don't fail the whole operation if stats update fails
+      }
+    }
+
     return NextResponse.json({
       message: `Successfully synced ${syncedCount} rows`,
       synced: syncedCount,
