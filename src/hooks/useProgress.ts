@@ -215,18 +215,26 @@ export function useProgress() {
 
       const totalSessions = categoryData?.total_sessions || 0;
 
-      // Count actual completed sessions for this category on this date
+      // Count actual completed sessions for this category on this date only
       const { data: completedSessions, error: countError } = await supabase
         .from('user_session_progress')
-        .select('id')
+        .select('id, completed_at')
         .eq('user_id', userId)
         .eq('category_id', categoryId)
         .eq('status', 'completed')
         .not('completed_at', 'is', null);
 
+      // Filter by today's date in local timezone
+      const todayCompleted = completedSessions?.filter(session => {
+        if (!session.completed_at) return false;
+        const completedDate = new Date(session.completed_at);
+        const completedDateStr = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}-${String(completedDate.getDate()).padStart(2, '0')}`;
+        return completedDateStr === today;
+      }) || [];
+
       if (countError) throw countError;
 
-      const actualCompletedCount = completedSessions?.length || 0;
+      const actualCompletedCount = todayCompleted.length;
 
       console.log('=== Calculating Actual Completed Count ===');
       console.log('Category ID:', categoryId);
