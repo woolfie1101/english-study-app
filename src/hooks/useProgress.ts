@@ -43,7 +43,7 @@ export function useProgress() {
   };
 
   /**
-   * 사용자의 표현 완료 목록 조회
+   * 사용자의 표현 완료 목록 조회 (오늘 날짜 기준)
    */
   const getCompletedExpressions = async (
     userId: string,
@@ -65,7 +65,19 @@ export function useProgress() {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data || [];
+
+      // Filter by today's date in local timezone
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      const todayCompleted = (data || []).filter(item => {
+        if (!item.completed_at) return false;
+        const completedDate = new Date(item.completed_at);
+        const completedDateStr = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}-${String(completedDate.getDate()).padStart(2, '0')}`;
+        return completedDateStr === today;
+      });
+
+      return todayCompleted;
     } catch (err) {
       const error = err as Error;
       setError(error);
