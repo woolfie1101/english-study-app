@@ -1,0 +1,60 @@
+table_name,column_name,data_type,udt_name,is_nullable,column_default,column_comment
+categories,id,uuid,uuid,NO,uuid_generate_v4(),null
+categories,name,text,text,NO,null,null
+categories,display_order,integer,int4,YES,null,null
+categories,total_sessions,integer,int4,YES,0,null
+categories,icon,text,text,YES,null,null
+categories,created_at,timestamp with time zone,timestamptz,YES,now(),null
+categories,updated_at,timestamp with time zone,timestamptz,YES,now(),null
+categories,slug,text,text,YES,null,카테고리 URL 슬러그 (audio 파일 경로에 사용)
+daily_study_stats,id,uuid,uuid,NO,uuid_generate_v4(),null
+daily_study_stats,user_id,uuid,uuid,NO,null,null
+daily_study_stats,study_date,date,date,NO,null,null
+daily_study_stats,category_id,uuid,uuid,NO,null,null
+daily_study_stats,sessions_completed,integer,int4,YES,0,null
+daily_study_stats,total_sessions,integer,int4,YES,0,null
+daily_study_stats,created_at,timestamp with time zone,timestamptz,YES,now(),null
+daily_study_stats,updated_at,timestamp with time zone,timestamptz,YES,now(),null
+daily_study_stats,expressions_completed,integer,int4,YES,0,null
+daily_study_stats,study_time_minutes,integer,int4,YES,0,null
+expressions,id,uuid,uuid,NO,uuid_generate_v4(),null
+expressions,session_id,uuid,uuid,NO,null,null
+expressions,display_order,integer,int4,NO,null,null
+expressions,english,text,text,NO,null,null
+expressions,korean,text,text,NO,null,null
+expressions,audio_url,text,text,YES,null,null
+expressions,created_at,timestamp with time zone,timestamptz,YES,now(),null
+expressions,updated_at,timestamp with time zone,timestamptz,YES,now(),null
+expressions,metadata,jsonb,jsonb,YES,'{}'::jsonb,"표현별 고유 데이터 (JSON 형식, 예: 난이도, 출처 등)"
+sessions,id,uuid,uuid,NO,uuid_generate_v4(),null
+sessions,category_id,uuid,uuid,NO,null,null
+sessions,session_number,integer,int4,NO,null,null
+sessions,title,text,text,NO,null,null
+sessions,pattern_english,text,text,YES,null,null
+sessions,pattern_korean,text,text,YES,null,null
+sessions,created_at,timestamp with time zone,timestamptz,YES,now(),null
+sessions,updated_at,timestamp with time zone,timestamptz,YES,now(),null
+sessions,description,text,text,YES,null,패턴(오늘의 표현)에 대한 추가 설명 (선택적)
+sessions,metadata,jsonb,jsonb,YES,'{}'::jsonb,카테고리별 고유 데이터 (JSON 형식)
+user_expression_progress,id,uuid,uuid,NO,uuid_generate_v4(),null
+user_expression_progress,user_id,uuid,uuid,NO,null,null
+user_expression_progress,expression_id,uuid,uuid,NO,null,null
+user_expression_progress,completed_at,timestamp with time zone,timestamptz,YES,now(),null
+user_expression_progress,created_at,timestamp with time zone,timestamptz,YES,now(),null
+user_expression_progress,session_id,uuid,uuid,YES,null,null
+user_expression_progress,category_id,uuid,uuid,YES,null,null
+user_session_progress,id,uuid,uuid,NO,uuid_generate_v4(),null
+user_session_progress,user_id,uuid,uuid,NO,null,null
+user_session_progress,session_id,uuid,uuid,NO,null,null
+user_session_progress,status,text,text,NO,null,null
+user_session_progress,completed_at,timestamp with time zone,timestamptz,YES,null,null
+user_session_progress,created_at,timestamp with time zone,timestamptz,YES,now(),null
+user_session_progress,updated_at,timestamp with time zone,timestamptz,YES,now(),null
+user_session_progress,category_id,uuid,uuid,YES,null,null
+user_settings,id,uuid,uuid,NO,uuid_generate_v4(),null
+user_settings,user_id,uuid,uuid,NO,null,null
+user_settings,auto_play_audio,boolean,bool,YES,true,null
+user_settings,daily_reminder,boolean,bool,YES,false,null
+user_settings,dark_mode,boolean,bool,YES,false,null
+user_settings,created_at,timestamp with time zone,timestamptz,YES,now(),null
+user_settings,updated_at,timestamp with time zone,timestamptz,YES,now(),null

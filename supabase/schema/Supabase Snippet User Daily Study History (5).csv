@@ -1,0 +1,8 @@
+trigger_name,event_manipulation,event_object_table,action_statement,action_timing
+update_categories_updated_at,UPDATE,categories,EXECUTE FUNCTION update_updated_at_column(),BEFORE
+update_daily_study_stats_updated_at,UPDATE,daily_study_stats,EXECUTE FUNCTION update_updated_at_column(),BEFORE
+update_expressions_updated_at,UPDATE,expressions,EXECUTE FUNCTION update_updated_at_column(),BEFORE
+update_sessions_updated_at,UPDATE,sessions,EXECUTE FUNCTION update_updated_at_column(),BEFORE
+update_user_session_progress_updated_at,UPDATE,user_session_progress,EXECUTE FUNCTION update_updated_at_column(),BEFORE
+trigger_update_user_settings_updated_at,UPDATE,user_settings,EXECUTE FUNCTION update_user_settings_updated_at(),BEFORE
+update_user_settings_updated_at,UPDATE,user_settings,EXECUTE FUNCTION update_updated_at_column(),BEFORE

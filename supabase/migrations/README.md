@@ -1,105 +1,73 @@
 # Database Migrations
 
-## 마이그레이션 실행 방법
+## Current Schema
 
-### 옵션 1: Supabase Dashboard (권장)
-1. [Supabase Dashboard](https://supabase.com/dashboard/project/mltoqwqobwbzgqutvclv/editor) 접속
-2. SQL Editor 열기
-3. 마이그레이션 파일 내용 복사 & 실행
-4. **순서대로 실행** (중요!):
-   - `001_initial_schema.sql` - 기본 스키마
-   - `002_storage_policies.sql` - Storage RLS
-   - `003_allow_anon_upload.sql` - Anonymous upload
-   - `004_add_progress_columns.sql` - 진행 상황 컬럼 추가
-   - `005_update_rls_policies.sql` - RLS 정책 업데이트
-   - `006_create_test_user.sql` - 테스트 사용자 생성
-   - `007_update_functions.sql` - 함수 업데이트
+**Active Migration**: `000_complete_schema.sql`
 
-### 옵션 2: Supabase CLI
+This file contains the complete, consolidated database schema for the English Study App.
+
+## Schema Overview
+
+### Tables
+1. **categories** - Learning categories (Daily Expression, Pattern, Grammar)
+2. **sessions** - Individual learning sessions within categories
+3. **expressions** - English expressions to learn within sessions
+4. **user_session_progress** - Track user session completion status
+5. **user_expression_progress** - Track individual expression completion
+6. **daily_study_stats** - Daily study statistics by date and category
+7. **user_settings** - User app settings
+
+### Key Features
+- **Daily Reset Logic**: Progress is filtered by CURRENT_DATE in queries
+- **RLS Policies**: Row-level security for user data isolation
+- **Test User Support**: Special UUID `00000000-0000-0000-0000-000000000001` for development
+- **Storage Integration**: Audio files bucket with public read access
+
+## Fresh Database Setup
+
 ```bash
-# 프로젝트 연결 (최초 1회)
-npx supabase link --project-ref mltoqwqobwbzgqutvclv
-
-# 마이그레이션 실행
-npx supabase db push
+# Apply the complete schema to a new Supabase project
+supabase db push
 ```
 
-## 마이그레이션 목록
+Or manually via Supabase Dashboard:
+1. Open SQL Editor
+2. Copy and run `000_complete_schema.sql`
 
-### 001_initial_schema.sql
-- 초기 데이터베이스 스키마 생성
-- 테이블: categories, sessions, expressions, user_session_progress, user_expression_progress, daily_study_stats, user_settings
-- 기본 RLS 정책: categories, sessions, expressions (읽기 전용)
-- 인덱스 생성 (성능 최적화)
+## Archive
 
-### 002_storage_policies.sql
-- Supabase Storage 설정
-- audio-files 버킷 RLS 정책
+All previous migration files (001-017) have been archived in the `/archive` folder.
+These represent the historical evolution of the schema but are no longer needed for new deployments.
 
-### 003_allow_anon_upload.sql
-- Anonymous 사용자 오디오 업로드 허용
-
-### 004_add_progress_columns.sql ⭐ NEW
-- user_session_progress에 category_id 추가
-- user_expression_progress에 session_id, category_id 추가
-- daily_study_stats에 expressions_completed, study_time_minutes 추가
-- 기존 데이터 마이그레이션 포함
-
-### 005_update_rls_policies.sql ⭐ NEW
-- 모든 진행 상황 테이블에 RLS 정책 추가
-- 테스트 사용자(00000000-0000-0000-0000-000000000001) 접근 허용
-- user_session_progress, user_expression_progress, daily_study_stats
-
-### 006_create_test_user.sql ⭐ NEW
-- 테스트 사용자 생성
-- UUID: 00000000-0000-0000-0000-000000000001
-- Email: test@example.com
-
-### 007_update_functions.sql ⭐ NEW
-- get_categories_with_progress 함수 생성/업데이트
-- UUID 파라미터 사용으로 변경
-- 카테고리별 진행률 계산
-
-### 999_reset_test_data.sql 🔧 UTILITY
-- 테스트 사용자 진행 상황 초기화
-- 개발/테스트 용도
-- **경고**: 모든 진행 데이터 삭제됨
-
-## 테스트 사용자 정보
+## Test User
 
 ```
 UUID: 00000000-0000-0000-0000-000000000001
 Email: test@example.com
 ```
 
-코드에서 사용:
+Usage in code:
 ```typescript
 const userId = '00000000-0000-0000-0000-000000000001';
 ```
 
-## 진행 상황 초기화
+## Important Notes
 
-테스트 중 진행 상황을 리셋하려면:
-```sql
--- 999_reset_test_data.sql 실행
-```
+1. **Date Handling**: All date comparisons use `DATE(completed_at) = CURRENT_DATE` to ensure proper daily reset
+2. **Test User**: Anonymous users use test user ID for development
+3. **Storage**: Audio files are stored in `audio-files` bucket with public access
+4. **Functions**: `get_categories_with_progress()` returns TODAY's progress only
 
-## 트러블슈팅
+## Schema Version
 
-### RLS 정책 에러
-```
-new row violates row-level security policy
-```
-→ 005_update_rls_policies.sql 재실행
+- **Version**: 1.0.0 (Consolidated)
+- **Generated**: 2025-10-09
+- **Previous Migrations**: 18 files archived
 
-### 함수 없음 에러
-```
-Could not find the function get_categories_with_progress
-```
-→ 007_update_functions.sql 재실행
+## Future Updates
 
-### 컬럼 없음 에러
+For future schema changes, create new numbered migration files:
+```bash
+# Example: Add new feature
+# Create: 018_add_feature_name.sql
 ```
-column does not exist
-```
-→ 004_add_progress_columns.sql 재실행
