@@ -223,14 +223,16 @@ export function useProgress() {
       console.log('Formatted Date (Local):', today);
       console.log('ISO String:', now.toISOString());
 
-      // Get total sessions for this category
-      const { data: categoryData } = await supabase
-        .from('categories')
-        .select('total_sessions')
-        .eq('id', categoryId)
-        .single();
+      // Get ACTUAL total sessions count for this category
+      // Don't trust categories.total_sessions - count directly from sessions table
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('category_id', categoryId);
 
-      const totalSessions = categoryData?.total_sessions || 0;
+      if (sessionsError) throw sessionsError;
+
+      const totalSessions = sessionsData?.length || 0;
 
       // Count actual completed sessions for this category on this date only
       const { data: completedSessions, error: countError } = await supabase
