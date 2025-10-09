@@ -41,18 +41,29 @@ export function useCategory(slug: string, userId: string = '00000000-0000-0000-0
 
       if (sessionsError) throw sessionsError
 
-      // Get user progress for this category
+      // Get user progress for this category (all completed sessions)
       const { data: progressData, error: progressError } = await supabase
         .from('user_session_progress')
-        .select('session_id, status')
+        .select('session_id, status, completed_at')
         .eq('user_id', userId)
         .eq('category_id', categoryData.id)
         .eq('status', 'completed')
 
       if (progressError) throw progressError
 
-      // Count completed sessions
-      const completed = progressData?.length || 0
+      // Filter by today's date in local timezone
+      const now = new Date()
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+      const todayCompleted = (progressData as any[])?.filter((progress: any) => {
+        if (!progress.completed_at) return false
+        const completedDate = new Date(progress.completed_at)
+        const completedDateStr = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}-${String(completedDate.getDate()).padStart(2, '0')}`
+        return completedDateStr === today
+      }) || []
+
+      // Count completed sessions for today
+      const completed = todayCompleted.length
 
       const categoryWithSessions: CategoryWithSessions = {
         ...categoryData,
