@@ -107,8 +107,8 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
   // Auto-complete session when all expressions are completed
   useEffect(() => {
     const handleSessionCompletion = async () => {
-      // Only complete once
-      if (allCompleted && expressionsWithStatus.length > 0 && !sessionCompleted) {
+      // Only complete once, and ensure there are actually expressions to complete
+      if (allCompleted && expressionsWithStatus.length > 0 && !sessionCompleted && expressionsWithStatus.length === session.expressions.length) {
         try {
           // Complete session
           await completeSession(userId, session.id, category.id);

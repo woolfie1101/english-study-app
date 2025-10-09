@@ -8,6 +8,7 @@ export function useProgress() {
   /**
    * 표현 완료 처리
    * user_expression_progress 테이블에 저장
+   * 이미 완료한 표현이면 오늘 날짜로 업데이트
    */
   const completeExpression = async (
     userId: string,
@@ -19,14 +20,18 @@ export function useProgress() {
     setError(null);
 
     try {
+      // Use upsert to handle duplicates - update completed_at to today
       const { data, error } = await supabase
         .from('user_expression_progress')
-        .insert({
+        .upsert({
           user_id: userId,
           expression_id: expressionId,
           session_id: sessionId,
           category_id: categoryId,
           completed_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,expression_id',
+          ignoreDuplicates: false
         })
         .select()
         .single();
