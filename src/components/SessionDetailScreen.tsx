@@ -50,6 +50,8 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
     session.expressions.map(exp => ({ ...exp, completed: false }))
   );
 
+  const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
+
   // Load completed expressions on mount
   useEffect(() => {
     const loadCompletedExpressions = async () => {
@@ -192,12 +194,21 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
 
         {/* Expression Cards */}
         <div className="space-y-4">
-          {expressionsWithStatus.map((expression, index) => (
+          {expressionsWithStatus.map((expression) => (
             <Card key={expression.id} className="p-6 border-l-4 border-l-blue-500">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-lg text-gray-900 bg-gray-100 p-3 rounded-lg">{expression.english}</p>
-                  <p className="pl-4 border-l-2 border-gray-300 text-gray-400 mt-3">{expression.korean}</p>
+                  <div
+                    onClick={() => setShowTranslation(prev => ({ ...prev, [expression.id]: !prev[expression.id] }))}
+                    className="cursor-pointer"
+                  >
+                    {showTranslation[expression.id] ? (
+                      <p className="pl-4 border-l-2 border-gray-300 text-gray-500 mt-3">{expression.korean}</p>
+                    ) : (
+                      <p className="pl-4 border-l-2 border-gray-300 text-gray-400 mt-3">클릭하여 해석 보기</p>
+                    )}
+                  </div>
                 </div>
                 
                 <AudioPlayer
