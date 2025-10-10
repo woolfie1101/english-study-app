@@ -65,17 +65,17 @@ export async function POST(request: Request) {
     }
 
     // Map audio-folder to category slug
-    // For ConversationalEx sheet, always use conversational-ex-expression category
+    // For RealTalkExamples sheet, always use real-talk-examples category
     // even if audio-folder is 'conversational' (since they share the same audio folder)
     let categorySlug: string;
     if (sheetName === 'ConversationalEx') {
-      categorySlug = 'conversational-ex-expression';
+      categorySlug = 'real-talk-examples';
     } else {
       const audioFolder = pendingRows[0].get('audio-folder');
       const categorySlugMap: Record<string, string> = {
-        'daily': 'daily-expression',
-        'news': 'news-expression',
-        'conversational': 'conversational-expression'
+        'daily': 'daily-phrases',
+        'news': 'news-phrases',
+        'conversational': 'real-talk'
       };
       categorySlug = categorySlugMap[audioFolder] || audioFolder;
     }

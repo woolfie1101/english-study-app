@@ -17,7 +17,7 @@ interface ExpressionWithStatus extends Expression {
   completed: boolean;
 }
 
-interface SessionDetailScreenProps {
+interface DailyPhrasesScreenProps {
   category: {
     id: string;
     name: string;
@@ -29,7 +29,7 @@ interface SessionDetailScreenProps {
   };
 }
 
-export function SessionDetailScreen({ category, session }: SessionDetailScreenProps) {
+export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProps) {
   const router = useRouter();
   const {
     completeExpression,

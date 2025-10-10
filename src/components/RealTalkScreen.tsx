@@ -14,7 +14,7 @@ import Image from "next/image";
 type Expression = Database['public']['Tables']['expressions']['Row']
 type Session = Database['public']['Tables']['sessions']['Row']
 
-interface ConversationalSessionDetailScreenProps {
+interface RealTalkScreenProps {
   category: {
     id: string;
     name: string;
@@ -26,7 +26,7 @@ interface ConversationalSessionDetailScreenProps {
   };
 }
 
-export function ConversationalSessionDetailScreen({ category, session }: ConversationalSessionDetailScreenProps) {
+export function RealTalkScreen({ category, session }: RealTalkScreenProps) {
   const router = useRouter();
   const {
     completeSession,

@@ -1,9 +1,9 @@
 "use client";
 
-import { SessionDetailScreen } from "@/components/SessionDetailScreen";
-import { NewsSessionDetailScreen } from "@/components/NewsSessionDetailScreen";
-import { ConversationalSessionDetailScreen } from "@/components/ConversationalSessionDetailScreen";
-import { ConversationalExSessionDetailScreen } from "@/components/ConversationalExSessionDetailScreen";
+import { DailyPhrasesScreen } from "@/components/DailyPhrasesScreen";
+import { NewsPhrasesScreen } from "@/components/NewsPhrasesScreen";
+import { RealTalkScreen } from "@/components/RealTalkScreen";
+import { RealTalkExamplesScreen } from "@/components/RealTalkExamplesScreen";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/useSession";
@@ -47,18 +47,18 @@ export default function SessionDetailPage() {
   }
 
   // Use different screen based on category
-  if (slug === 'news-expression') {
-    return <NewsSessionDetailScreen category={category} session={session} />;
+  if (slug === 'news-phrases') {
+    return <NewsPhrasesScreen category={category} session={session} />;
   }
 
-  if (slug === 'conversational-expression') {
-    return <ConversationalSessionDetailScreen category={category} session={session} />;
+  if (slug === 'real-talk') {
+    return <RealTalkScreen category={category} session={session} />;
   }
 
-  if (slug === 'conversational-ex-expression') {
-    return <ConversationalExSessionDetailScreen category={category} session={session} />;
+  if (slug === 'real-talk-examples') {
+    return <RealTalkExamplesScreen category={category} session={session} />;
   }
 
-  // Default: Daily Expression
-  return <SessionDetailScreen category={category} session={session} />;
+  // Default: Daily Phrases
+  return <DailyPhrasesScreen category={category} session={session} />;
 }
