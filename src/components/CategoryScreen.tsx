@@ -20,7 +20,7 @@ interface CategoryScreenProps {
   category: {
     id: string;
     name: string;
-    slug: string;
+    slug: string | null;
     completed: number;
     total_sessions: number;
     sessions: Session[];
@@ -42,6 +42,11 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const handleSyncData = async () => {
+    if (!category.slug) {
+      toast.error('카테고리 슬러그가 없습니다.');
+      return;
+    }
+    
     const sheetName = SHEET_NAME_MAP[category.slug];
     if (!sheetName) {
       toast.error('이 카테고리는 아직 자동 동기화를 지원하지 않습니다.');

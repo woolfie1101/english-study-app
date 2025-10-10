@@ -34,7 +34,7 @@ async function resetTodaySession() {
   console.log('Found', todaySessions.length, 'sessions to reset');
 
   for (const session of todaySessions) {
-    console.log(`Deleting session ${session.sessions?.session_number} progress (ID: ${session.id})`);
+    console.log(`Deleting session ${(session.sessions as any)?.session_number} progress (ID: ${session.id})`);
     await supabase
       .from('user_session_progress')
       .delete()

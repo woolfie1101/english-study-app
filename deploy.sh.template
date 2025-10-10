@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Google Cloud Run 재배포 스크립트 (템플릿)
+# 사용법: ./deploy.sh [PROJECT_ID] [SERVICE_NAME]
+# 
+# 환경 변수 설정 필요:
+# export NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
+# export NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+# export SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+
+PROJECT_ID=${1:-"gen-lang-client-0458093252"}
+SERVICE_NAME=${2:-"english-study-app"}
+REGION="asia-northeast3"  # 서울 리전
+
+# 환경 변수 확인
+if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+    echo "❌ 환경 변수가 설정되지 않았습니다!"
+    echo "다음 명령어로 환경 변수를 설정하세요:"
+    echo ""
+    echo "export NEXT_PUBLIC_SUPABASE_URL=\"your-supabase-url\""
+    echo "export NEXT_PUBLIC_SUPABASE_ANON_KEY=\"your-anon-key\""
+    echo "export SUPABASE_SERVICE_ROLE_KEY=\"your-service-role-key\""
+    echo ""
+    echo "또는 .env 파일을 로드하세요:"
+    echo "source .env"
+    exit 1
+fi
+
+echo "🚀 Google Cloud Run에 재배포를 시작합니다..."
+echo "프로젝트 ID: $PROJECT_ID"
+echo "서비스 이름: $SERVICE_NAME"
+echo "리전: $REGION"
+
+# Google Cloud 프로젝트 설정
+echo "📋 Google Cloud 프로젝트를 설정합니다..."
+gcloud config set project $PROJECT_ID
+
+# Docker 이미지 빌드 및 푸시
+echo "🐳 Docker 이미지를 빌드하고 푸시합니다..."
+docker buildx build --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+  --build-arg SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+  -t gcr.io/$PROJECT_ID/$SERVICE_NAME \
+  --push .
+
+# Cloud Run에 배포
+echo "🚀 Cloud Run에 서비스를 배포합니다..."
+gcloud run deploy $SERVICE_NAME \
+  --image gcr.io/$PROJECT_ID/$SERVICE_NAME \
+  --platform managed \
+  --region $REGION \
+  --allow-unauthenticated \
+  --port 3000 \
+  --memory 1Gi \
+  --cpu 1 \
+  --max-instances 10 \
+  --set-env-vars "NODE_ENV=production,NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+
+echo "✅ 재배포가 완료되었습니다!"
+echo "🌐 서비스 URL을 확인하려면 다음 명령어를 실행하세요:"
+echo "gcloud run services describe $SERVICE_NAME --region=$REGION --format='value(status.url)'"
+
+# 서비스 URL 자동 출력
+echo ""
+echo "🔗 현재 서비스 URL:"
+gcloud run services describe $SERVICE_NAME --region=$REGION --format='value(status.url)'

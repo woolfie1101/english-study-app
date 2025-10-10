@@ -21,6 +21,7 @@ interface SessionDetailScreenProps {
   category: {
     id: string;
     name: string;
+    slug: string | null;
     total_sessions: number;
   };
   session: Session & {
@@ -56,7 +57,7 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
   useEffect(() => {
     const loadCompletedExpressions = async () => {
       const completed = await getCompletedExpressions(userId, session.id);
-      const completedIds = new Set(completed.map(c => c.expression_id));
+      const completedIds = new Set(completed.map((c: any) => c.expression_id));
 
       setExpressionsWithStatus(prev =>
         prev.map(exp => ({
@@ -139,7 +140,7 @@ export function SessionDetailScreen({ category, session }: SessionDetailScreenPr
       // Get next session number
       const nextSessionNumber = await getNextSession(category.id, session.session_number);
 
-      if (nextSessionNumber) {
+      if (nextSessionNumber && category.slug) {
         // Navigate to next session
         router.push(`/category/${category.slug}/session/${nextSessionNumber}`);
       } else {

@@ -34,7 +34,7 @@ export default function CategoryPage() {
     );
   }
 
-  if (!category) {
+  if (!category || !category.slug) {
     return null;
   }
 
