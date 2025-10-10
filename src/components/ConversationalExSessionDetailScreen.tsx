@@ -81,60 +81,48 @@ export function ConversationalExSessionDetailScreen({ category, session }: Conve
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="p-2"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-gray-900">{category.name}</h1>
-          <p className="text-sm text-gray-600">Session {session.session_number}</p>
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="p-2"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-gray-900">{category.name}</h1>
+            <p className="text-sm text-gray-600">Session {session.session_number}</p>
+          </div>
         </div>
         {conversationalNum && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleGoToConversational}
-            className="flex items-center space-x-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+            className="flex items-center space-x-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           >
-            <span className="text-sm">View Conversational #{conversationalNum}</span>
-            <ExternalLink className="w-4 h-4" />
+            <span className="text-xs">Real Talk #{conversationalNum}</span>
+            <ExternalLink className="w-3 h-3" />
           </Button>
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-        {/* Title Card */}
-        <Card className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-          <h2 className="text-xl font-semibold text-purple-900 mb-2">{session.title}</h2>
-          {session.description && (
-            <div className="mt-3 p-3 bg-white/70 rounded-lg border border-purple-200">
-              <div className="flex items-start space-x-2">
-                <span className="text-purple-600 font-semibold text-sm">💡</span>
-                <p className="text-sm text-purple-800 leading-relaxed">{session.description}</p>
-              </div>
-            </div>
-          )}
-        </Card>
+        
+        {/* Example Sentences */}
+        <div className="space-y-4">
 
-        {/* Audio Player */}
-        {patternAudioUrl && (
-          <div className="pt-2">
+          {/* Audio Player */}
+          {patternAudioUrl && (
             <AudioPlayer
               audioUrl={patternAudioUrl}
               duration={12}
             />
-          </div>
-        )}
+          )}
 
-        {/* Example Sentences */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Example Expressions</h3>
           {session.expressions.map((expression, index) => (
             <Card key={expression.id} className="p-4 border-l-4 border-l-pink-500">
               <div className="space-y-2">
