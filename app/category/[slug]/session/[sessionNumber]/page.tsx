@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionDetailScreen } from "@/components/SessionDetailScreen";
+import { NewsSessionDetailScreen } from "@/components/NewsSessionDetailScreen";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/useSession";
@@ -43,7 +44,15 @@ export default function SessionDetailPage() {
     return null;
   }
 
-  return (
+  // Use different screen based on category
+  const isNewsCategory = slug === 'news-expression';
+
+  return isNewsCategory ? (
+    <NewsSessionDetailScreen
+      category={category}
+      session={session}
+    />
+  ) : (
     <SessionDetailScreen
       category={category}
       session={session}

@@ -64,8 +64,13 @@ export async function POST(request: Request) {
       });
     }
 
-    // Get category by slug
-    const categorySlug = pendingRows[0].get('audio-folder');
+    // Map audio-folder to category slug
+    const audioFolder = pendingRows[0].get('audio-folder');
+    const categorySlugMap: Record<string, string> = {
+      'daily': 'daily-expression',
+      'news': 'news-expression'
+    };
+    const categorySlug = categorySlugMap[audioFolder] || audioFolder;
     console.log('Looking for category with slug:', categorySlug);
 
     const { data: category, error: categoryError } = await supabaseAdmin
@@ -108,8 +113,26 @@ export async function POST(request: Request) {
 
         let sessionId: string;
 
+        const audioFolder = row.get('audio-folder');
+        const isNewsCategory = audioFolder === 'news';
+        // Construct full audio path: audio-folder/filename
+        const patternAudioUrl = isNewsCategory
+          ? `${audioFolder}/${row.get('filename')}`
+          : null;
+
         if (existingSession) {
           sessionId = existingSession.id;
+          // Update session with new data including pattern audio for News
+          await supabaseAdmin
+            .from('sessions')
+            .update({
+              title: row.get('pattern_english') || `Session ${sessionNumber}`,
+              description: row.get('additional_explain') || null,
+              pattern_english: row.get('pattern_english'),
+              pattern_korean: row.get('pattern_korean'),
+              metadata: patternAudioUrl ? { pattern_audio_url: patternAudioUrl } : {}
+            })
+            .eq('id', sessionId);
         } else {
           const { data: newSession, error: sessionError } = await supabaseAdmin
             .from('sessions')
@@ -119,7 +142,8 @@ export async function POST(request: Request) {
               title: row.get('pattern_english') || `Session ${sessionNumber}`,
               description: row.get('additional_explain') || null,
               pattern_english: row.get('pattern_english'),
-              pattern_korean: row.get('pattern_korean')
+              pattern_korean: row.get('pattern_korean'),
+              metadata: patternAudioUrl ? { pattern_audio_url: patternAudioUrl } : {}
             })
             .select('id')
             .single();
@@ -128,25 +152,54 @@ export async function POST(request: Request) {
           sessionId = newSession.id;
         }
 
-        // Insert expressions for this session (only examples, not the pattern itself)
-        const expressions = [
-          {
-            session_id: sessionId,
-            korean: row.get('ex1_kor'),
-            english: row.get('ex1_en'),
-            audio_url: row.get('ex1_filename'),
-            display_order: 1,
-            metadata: {}
-          },
-          {
-            session_id: sessionId,
-            korean: row.get('ex2_kor'),
-            english: row.get('ex2_en'),
-            audio_url: row.get('ex2_filename'),
-            display_order: 2,
-            metadata: {}
+        // Insert expressions for this session
+        // For News: pattern-level audio, ex1-ex6 examples
+        // For Daily: individual audio files per example
+        const expressions = [];
+
+        if (isNewsCategory) {
+          // News Expression: 6 examples without individual audio
+          for (let i = 1; i <= 6; i++) {
+            const english = row.get(`ex${i}_en`);
+            const korean = row.get(`ex${i}_kor`);
+            if (english && korean) {
+              expressions.push({
+                session_id: sessionId,
+                korean,
+                english,
+                audio_url: null, // No individual audio for News examples
+                display_order: i,
+                metadata: {}
+              });
+            }
           }
-        ].filter(exp => exp.english && exp.korean); // Only insert if both Korean and English exist
+        } else {
+          // Daily Expression: 2 examples with individual audio
+          // Construct full audio path: audio-folder/filename
+          const ex1Filename = row.get('ex1_filename');
+          const ex2Filename = row.get('ex2_filename');
+
+          expressions.push(
+            {
+              session_id: sessionId,
+              korean: row.get('ex1_kor'),
+              english: row.get('ex1_en'),
+              audio_url: ex1Filename ? `${audioFolder}/${ex1Filename}` : null,
+              display_order: 1,
+              metadata: {}
+            },
+            {
+              session_id: sessionId,
+              korean: row.get('ex2_kor'),
+              english: row.get('ex2_en'),
+              audio_url: ex2Filename ? `${audioFolder}/${ex2Filename}` : null,
+              display_order: 2,
+              metadata: {}
+            }
+          );
+        }
+
+        const validExpressions = expressions.filter(exp => exp.english && exp.korean);
 
         // Delete existing expressions for this session
         await supabaseAdmin
@@ -155,11 +208,13 @@ export async function POST(request: Request) {
           .eq('session_id', sessionId);
 
         // Insert new expressions
-        const { error: expressionsError } = await supabaseAdmin
-          .from('expressions')
-          .insert(expressions);
+        if (validExpressions.length > 0) {
+          const { error: expressionsError } = await supabaseAdmin
+            .from('expressions')
+            .insert(validExpressions);
 
-        if (expressionsError) throw expressionsError;
+          if (expressionsError) throw expressionsError;
+        }
 
         // Update status to 'completed'
         row.set('status', 'completed');

@@ -30,7 +30,8 @@ interface CategoryScreenProps {
 
 // Map category slug to Google Sheet name
 const SHEET_NAME_MAP: Record<string, string> = {
-  'daily-expression': 'DailyExpression'
+  'daily-expression': 'DailyExpression',
+  'news-expression': 'News'
 };
 
 export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
