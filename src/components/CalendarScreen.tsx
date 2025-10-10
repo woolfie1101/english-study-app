@@ -114,127 +114,129 @@ export function CalendarScreen() {
   }
 
   return (
-    <div className="flex-1 bg-background">
-      {/* Header */}
-      <div className="px-6 pt-12 pb-6">
-        <h1 className="text-center">Study Calendar</h1>
-      </div>
+    <div className="flex h-full flex-col bg-background">
+      <div className="flex-1 overflow-y-auto pb-10">
+        {/* Header */}
+        <div className="px-6 pt-12 pb-6">
+          <h1 className="text-center">Study Calendar</h1>
+        </div>
 
-      {/* Month Navigation */}
-      <div className="flex items-center justify-between px-6 pb-6">
-        <Button variant="ghost" size="sm" onClick={() => navigateMonth('prev')}>
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-        <h2 className="text-xl">
-          {year && month ? `${monthNames[month - 1]} ${year}` : ''}
-        </h2>
-        <Button variant="ghost" size="sm" onClick={() => navigateMonth('next')}>
-          <ChevronRight className="w-5 h-5" />
-        </Button>
-      </div>
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between px-6 pb-6">
+          <Button variant="ghost" size="sm" onClick={() => navigateMonth('prev')}>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <h2 className="text-xl">
+            {year && month ? `${monthNames[month - 1]} ${year}` : ''}
+          </h2>
+          <Button variant="ghost" size="sm" onClick={() => navigateMonth('next')}>
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </div>
 
-      {/* Calendar Grid */}
-      <div className="px-6 pb-6">
         {/* Calendar Grid */}
-        <Card className="p-4">
-          {/* Week days header */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekDays.map(day => (
-              <div key={day} className="text-center text-sm text-gray-600 p-2">
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          {/* Calendar days */}
-          <div className="grid grid-cols-7 gap-1">
-            {/* Empty cells for days before the first day of month */}
-            {Array.from({ length: firstDayOfMonth }, (_, i) => (
-              <div key={`empty-${i}`} className="p-2"></div>
-            ))}
-            
-            {/* Days of the month */}
-            {monthData.map((dayData) => {
-              const today = new Date();
-              const isToday = dayData.studyDate.getDate() === today.getDate() &&
-                             dayData.studyDate.getMonth() === today.getMonth() &&
-                             dayData.studyDate.getFullYear() === today.getFullYear();
-
-              const isSelected = selectedDay?.date === dayData.date;
-
-              return (
-                <div
-                  key={dayData.date}
-                  onClick={() => handleDayClick(dayData)}
-                  className={`
-                    p-2 text-center cursor-pointer rounded-lg transition-colors relative
-                    ${getStatusColor(dayData.status)}
-                    ${dayData.status !== 'not-studied' ? 'hover:opacity-80' : 'cursor-not-allowed'}
-                    ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
-                    ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}
-                  `}
-                >
-                  <div className="text-sm font-medium">{dayData.studyDate.getDate()}</div>
-                  <div className="text-xs mt-1">
-                    {getStatusIndicator(dayData)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
-
-      {/* Legend */}
-      <div className="px-6 pb-4">
-        <Card className="p-4">
-          <div className="flex justify-around text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span>Completed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-              <span>Partial</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-200 rounded"></div>
-              <span>Not studied</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Selected Day Details */}
-      {selectedDay && (
         <div className="px-6 pb-6">
+          {/* Calendar Grid */}
           <Card className="p-4">
-            <h3 className="mb-3">
-              {monthNames[selectedDay.studyDate.getMonth()]} {selectedDay.studyDate.getDate()}, {selectedDay.studyDate.getFullYear()}
-            </h3>
-            <div className="mb-3 text-sm text-muted-foreground">
-              Total: {selectedDay.sessionsCompleted}/{selectedDay.totalSessions} sessions ({selectedDay.percentage}%)
+            {/* Week days header */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {weekDays.map(day => (
+                <div key={day} className="text-center text-sm text-gray-600 p-2">
+                  {day}
+                </div>
+              ))}
             </div>
-            <div className="space-y-2">
-              {selectedDay.categoryBreakdown.length > 0 ? (
-                selectedDay.categoryBreakdown.map((category) => {
-                  const percentage = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
-                  return (
-                    <div key={category.categoryId} className="flex justify-between items-center">
-                      <span className="text-sm">{category.categoryName}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {category.completed}/{category.total} ({percentage}%)
-                      </span>
+            
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-1">
+              {/* Empty cells for days before the first day of month */}
+              {Array.from({ length: firstDayOfMonth }, (_, i) => (
+                <div key={`empty-${i}`} className="p-2"></div>
+              ))}
+              
+              {/* Days of the month */}
+              {monthData.map((dayData) => {
+                const today = new Date();
+                const isToday = dayData.studyDate.getDate() === today.getDate() &&
+                               dayData.studyDate.getMonth() === today.getMonth() &&
+                               dayData.studyDate.getFullYear() === today.getFullYear();
+
+                const isSelected = selectedDay?.date === dayData.date;
+
+                return (
+                  <div
+                    key={dayData.date}
+                    onClick={() => handleDayClick(dayData)}
+                    className={`
+                      p-2 text-center cursor-pointer rounded-lg transition-colors relative
+                      ${getStatusColor(dayData.status)}
+                      ${dayData.status !== 'not-studied' ? 'hover:opacity-80' : 'cursor-not-allowed'}
+                      ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                      ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}
+                    `}
+                  >
+                    <div className="text-sm font-medium">{dayData.studyDate.getDate()}</div>
+                    <div className="text-xs mt-1">
+                      {getStatusIndicator(dayData)}
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-sm text-muted-foreground">No study data for this day</div>
-              )}
+                  </div>
+                );
+              })}
             </div>
           </Card>
         </div>
-      )}
+
+        {/* Legend */}
+        <div className="px-6 pb-4">
+          <Card className="p-4">
+            <div className="flex justify-around text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded"></div>
+                <span>Completed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+                <span>Partial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                <span>Not studied</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Selected Day Details */}
+        {selectedDay && (
+          <div className="px-6 pb-6">
+            <Card className="p-4">
+              <h3 className="mb-3">
+                {monthNames[selectedDay.studyDate.getMonth()]} {selectedDay.studyDate.getDate()}, {selectedDay.studyDate.getFullYear()}
+              </h3>
+              <div className="mb-3 text-sm text-muted-foreground">
+                Total: {selectedDay.sessionsCompleted}/{selectedDay.totalSessions} sessions ({selectedDay.percentage}%)
+              </div>
+              <div className="space-y-2">
+                {selectedDay.categoryBreakdown.length > 0 ? (
+                  selectedDay.categoryBreakdown.map((category) => {
+                    const percentage = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
+                    return (
+                      <div key={category.categoryId} className="flex justify-between items-center">
+                        <span className="text-sm">{category.categoryName}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {category.completed}/{category.total} ({percentage}%)
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-sm text-muted-foreground">No study data for this day</div>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
