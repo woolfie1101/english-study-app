@@ -69,7 +69,8 @@ export async function POST(request: Request) {
     const categorySlugMap: Record<string, string> = {
       'daily': 'daily-expression',
       'news': 'news-expression',
-      'conversational': 'conversational-expression'
+      'conversational': 'conversational-expression',
+      'conversationalEx': 'conversational-ex-expression'
     };
     const categorySlug = categorySlugMap[audioFolder] || audioFolder;
     console.log('Looking for category with slug:', categorySlug);
@@ -99,6 +100,7 @@ export async function POST(request: Request) {
         const imageFolder = row.get('image-folder') || audioFolder; // Default to audio folder if not specified
         const isNewsCategory = audioFolder === 'news';
         const isConversationalCategory = audioFolder === 'conversational';
+        const isConversationalExCategory = audioFolder === 'conversationalEx';
 
         console.log('Processing row:', {
           number: sessionNumber,
@@ -124,8 +126,8 @@ export async function POST(request: Request) {
         // Construct metadata based on category type
         const metadata: any = {};
 
-        // Add pattern audio for News and Conversational
-        if (isNewsCategory || isConversationalCategory) {
+        // Add pattern audio for News, Conversational, and ConversationalEx
+        if (isNewsCategory || isConversationalCategory || isConversationalExCategory) {
           const filename = row.get('filename');
           if (filename) {
             metadata.pattern_audio_url = `${audioFolder}/${filename}`;
@@ -146,16 +148,24 @@ export async function POST(request: Request) {
           }
         }
 
-        // For Conversational, use category name as title since there's no pattern
-        const sessionTitle = isConversationalCategory
+        // Add conversational_num for ConversationalEx
+        if (isConversationalExCategory) {
+          const conversationalNum = row.get('conversational_num');
+          if (conversationalNum) {
+            metadata.conversational_num = parseInt(conversationalNum);
+          }
+        }
+
+        // For Conversational and ConversationalEx, use category name as title since there's no pattern
+        const sessionTitle = (isConversationalCategory || isConversationalExCategory)
           ? row.get('category') || `Session ${sessionNumber}`
           : row.get('pattern_english') || `Session ${sessionNumber}`;
 
         const sessionData = {
           title: sessionTitle,
           description: row.get('additional_explain') || null,
-          pattern_english: isConversationalCategory ? null : row.get('pattern_english'),
-          pattern_korean: isConversationalCategory ? null : row.get('pattern_korean'),
+          pattern_english: (isConversationalCategory || isConversationalExCategory) ? null : row.get('pattern_english'),
+          pattern_korean: (isConversationalCategory || isConversationalExCategory) ? null : row.get('pattern_korean'),
           metadata
         };
 
@@ -184,10 +194,11 @@ export async function POST(request: Request) {
         // Insert expressions for this session
         // For News: pattern-level audio, ex1-ex6 examples
         // For Conversational: pattern-level audio, JSON contents_json
+        // For ConversationalEx: pattern-level audio, JSON contents_json (similar to Conversational)
         // For Daily: individual audio files per example
         const expressions = [];
 
-        if (isConversationalCategory) {
+        if (isConversationalCategory || isConversationalExCategory) {
           // Conversational Expression: parse JSON contents
           const contentsJson = row.get('contents_json');
           console.log('Raw contents_json:', contentsJson);

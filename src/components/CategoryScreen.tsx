@@ -32,7 +32,8 @@ interface CategoryScreenProps {
 const SHEET_NAME_MAP: Record<string, string> = {
   'daily-expression': 'DailyExpression',
   'news-expression': 'News',
-  'conversational-expression': 'Conversational'
+  'conversational-expression': 'Conversational',
+  'conversational-ex-expression': 'ConversationalEx'
 };
 
 export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {

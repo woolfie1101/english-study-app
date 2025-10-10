@@ -17,7 +17,7 @@ interface NewsSessionDetailScreenProps {
   category: {
     id: string;
     name: string;
-    slug: string;
+    slug: string | null;
     total_sessions: number;
   };
   session: Session & {

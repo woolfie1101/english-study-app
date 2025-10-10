@@ -4,17 +4,16 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import { AudioPlayer } from "./AudioPlayer";
 import { Database } from "@/types/database";
 import { useProgress } from "@/hooks/useProgress";
 import { getNextSession } from "@/hooks/useSession";
-import Image from "next/image";
 
 type Expression = Database['public']['Tables']['expressions']['Row']
 type Session = Database['public']['Tables']['sessions']['Row']
 
-interface ConversationalSessionDetailScreenProps {
+interface ConversationalExSessionDetailScreenProps {
   category: {
     id: string;
     name: string;
@@ -26,7 +25,7 @@ interface ConversationalSessionDetailScreenProps {
   };
 }
 
-export function ConversationalSessionDetailScreen({ category, session }: ConversationalSessionDetailScreenProps) {
+export function ConversationalExSessionDetailScreen({ category, session }: ConversationalExSessionDetailScreenProps) {
   const router = useRouter();
   const {
     completeSession,
@@ -37,20 +36,13 @@ export function ConversationalSessionDetailScreen({ category, session }: Convers
   // TODO: Replace with actual user authentication
   const userId = '00000000-0000-0000-0000-000000000001';
 
-  // Get pattern audio URL and images from metadata
+  // Get pattern audio URL and conversational_num from metadata
   const metadata = session.metadata as any;
   const patternAudioUrl = metadata?.pattern_audio_url || '';
-  const images = metadata?.images || [];
-
-  // Construct Supabase Storage URL for images
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const imageUrls = images.map((img: string) =>
-    `${supabaseUrl}/storage/v1/object/public/image-files/${img}`
-  );
+  const conversationalNum = metadata?.conversational_num;
 
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleCompleteSession = async () => {
     try {
@@ -79,6 +71,13 @@ export function ConversationalSessionDetailScreen({ category, session }: Convers
     }
   };
 
+  const handleGoToConversational = () => {
+    if (conversationalNum) {
+      // Navigate to the corresponding conversational session
+      router.push(`/category/conversational-expression/session/${conversationalNum}`);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -91,36 +90,37 @@ export function ConversationalSessionDetailScreen({ category, session }: Convers
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-gray-900">{category.name}</h1>
           <p className="text-sm text-gray-600">Session {session.session_number}</p>
         </div>
+        {conversationalNum && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGoToConversational}
+            className="flex items-center space-x-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            <span className="text-sm">View Conversational #{conversationalNum}</span>
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-        {/* Images */}
-        {imageUrls.length > 0 && (
-          <div className="space-y-4">
-            {imageUrls.map((url: string, index: number) => (
-              <Card
-                key={index}
-                className="p-2 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setSelectedImage(url)}
-              >
-                <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-                  <Image
-                    src={url}
-                    alt={`Conversational scene ${index + 1}`}
-                    fill
-                    className="object-contain"
-                    sizes="100vw"
-                  />
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+        {/* Title Card */}
+        <Card className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <h2 className="text-xl font-semibold text-purple-900 mb-2">{session.title}</h2>
+          {session.description && (
+            <div className="mt-3 p-3 bg-white/70 rounded-lg border border-purple-200">
+              <div className="flex items-start space-x-2">
+                <span className="text-purple-600 font-semibold text-sm">💡</span>
+                <p className="text-sm text-purple-800 leading-relaxed">{session.description}</p>
+              </div>
+            </div>
+          )}
+        </Card>
 
         {/* Audio Player */}
         {patternAudioUrl && (
@@ -134,12 +134,12 @@ export function ConversationalSessionDetailScreen({ category, session }: Convers
 
         {/* Example Sentences */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Expressions</h3>
+          <h3 className="text-lg font-medium text-gray-900">Example Expressions</h3>
           {session.expressions.map((expression, index) => (
-            <Card key={expression.id} className="p-4 border-l-4 border-l-purple-500">
+            <Card key={expression.id} className="p-4 border-l-4 border-l-pink-500">
               <div className="space-y-2">
                 <div className="flex items-start space-x-2">
-                  <span className="text-purple-600 font-semibold text-sm min-w-[24px]">{index + 1}.</span>
+                  <span className="text-pink-600 font-semibold text-sm min-w-[24px]">{index + 1}.</span>
                   <div className="flex-1 space-y-2">
                     <p className="text-base text-gray-900 bg-gray-50 p-3 rounded-lg">{expression.english}</p>
                     <div
@@ -164,7 +164,7 @@ export function ConversationalSessionDetailScreen({ category, session }: Convers
           <Button
             onClick={handleCompleteSession}
             disabled={loading}
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
           >
             {loading ? 'Saving...' : 'Complete Session'}
           </Button>
@@ -174,31 +174,13 @@ export function ConversationalSessionDetailScreen({ category, session }: Convers
         {sessionCompleted && (
           <Button
             onClick={handleNextSession}
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />
           </Button>
         )}
       </div>
-
-      {/* Image Modal */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="relative w-full h-full max-w-6xl max-h-[90vh]">
-            <Image
-              src={selectedImage}
-              alt="Expanded view"
-              fill
-              className="object-contain"
-              sizes="100vw"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

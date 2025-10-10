@@ -3,6 +3,7 @@
 import { SessionDetailScreen } from "@/components/SessionDetailScreen";
 import { NewsSessionDetailScreen } from "@/components/NewsSessionDetailScreen";
 import { ConversationalSessionDetailScreen } from "@/components/ConversationalSessionDetailScreen";
+import { ConversationalExSessionDetailScreen } from "@/components/ConversationalExSessionDetailScreen";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/useSession";
@@ -52,6 +53,10 @@ export default function SessionDetailPage() {
 
   if (slug === 'conversational-expression') {
     return <ConversationalSessionDetailScreen category={category} session={session} />;
+  }
+
+  if (slug === 'conversational-ex-expression') {
+    return <ConversationalExSessionDetailScreen category={category} session={session} />;
   }
 
   // Default: Daily Expression
