@@ -2,6 +2,7 @@
 
 import { SessionDetailScreen } from "@/components/SessionDetailScreen";
 import { NewsSessionDetailScreen } from "@/components/NewsSessionDetailScreen";
+import { ConversationalSessionDetailScreen } from "@/components/ConversationalSessionDetailScreen";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/useSession";
@@ -45,17 +46,14 @@ export default function SessionDetailPage() {
   }
 
   // Use different screen based on category
-  const isNewsCategory = slug === 'news-expression';
+  if (slug === 'news-expression') {
+    return <NewsSessionDetailScreen category={category} session={session} />;
+  }
 
-  return isNewsCategory ? (
-    <NewsSessionDetailScreen
-      category={category}
-      session={session}
-    />
-  ) : (
-    <SessionDetailScreen
-      category={category}
-      session={session}
-    />
-  );
+  if (slug === 'conversational-expression') {
+    return <ConversationalSessionDetailScreen category={category} session={session} />;
+  }
+
+  // Default: Daily Expression
+  return <SessionDetailScreen category={category} session={session} />;
 }

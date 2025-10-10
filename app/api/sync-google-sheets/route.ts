@@ -68,7 +68,8 @@ export async function POST(request: Request) {
     const audioFolder = pendingRows[0].get('audio-folder');
     const categorySlugMap: Record<string, string> = {
       'daily': 'daily-expression',
-      'news': 'news-expression'
+      'news': 'news-expression',
+      'conversational': 'conversational-expression'
     };
     const categorySlug = categorySlugMap[audioFolder] || audioFolder;
     console.log('Looking for category with slug:', categorySlug);
@@ -94,11 +95,18 @@ export async function POST(request: Request) {
     for (const row of pendingRows) {
       try {
         const sessionNumber = parseInt(row.get('number'));
+        const audioFolder = row.get('audio-folder');
+        const imageFolder = row.get('image-folder') || audioFolder; // Default to audio folder if not specified
+        const isNewsCategory = audioFolder === 'news';
+        const isConversationalCategory = audioFolder === 'conversational';
 
         console.log('Processing row:', {
           number: sessionNumber,
+          category: row.get('category'),
+          audio_folder: audioFolder,
           pattern_english: row.get('pattern_english'),
           pattern_korean: row.get('pattern_korean'),
+          contents_json: row.get('contents_json') ? 'present' : 'missing',
           ex1_en: row.get('ex1_en'),
           ex1_kor: row.get('ex1_kor')
         });
@@ -113,25 +121,50 @@ export async function POST(request: Request) {
 
         let sessionId: string;
 
-        const audioFolder = row.get('audio-folder');
-        const isNewsCategory = audioFolder === 'news';
-        // Construct full audio path: audio-folder/filename
-        const patternAudioUrl = isNewsCategory
-          ? `${audioFolder}/${row.get('filename')}`
-          : null;
+        // Construct metadata based on category type
+        const metadata: any = {};
+
+        // Add pattern audio for News and Conversational
+        if (isNewsCategory || isConversationalCategory) {
+          const filename = row.get('filename');
+          if (filename) {
+            metadata.pattern_audio_url = `${audioFolder}/${filename}`;
+          }
+        }
+
+        // Add images for Conversational
+        if (isConversationalCategory) {
+          const images: string[] = [];
+          const image1 = row.get('image1');
+          const image2 = row.get('image2');
+
+          if (image1) images.push(`${imageFolder}/${image1}`);
+          if (image2) images.push(`${imageFolder}/${image2}`);
+
+          if (images.length > 0) {
+            metadata.images = images;
+          }
+        }
+
+        // For Conversational, use category name as title since there's no pattern
+        const sessionTitle = isConversationalCategory
+          ? row.get('category') || `Session ${sessionNumber}`
+          : row.get('pattern_english') || `Session ${sessionNumber}`;
+
+        const sessionData = {
+          title: sessionTitle,
+          description: row.get('additional_explain') || null,
+          pattern_english: isConversationalCategory ? null : row.get('pattern_english'),
+          pattern_korean: isConversationalCategory ? null : row.get('pattern_korean'),
+          metadata
+        };
 
         if (existingSession) {
           sessionId = existingSession.id;
-          // Update session with new data including pattern audio for News
+          // Update session with new data
           await supabaseAdmin
             .from('sessions')
-            .update({
-              title: row.get('pattern_english') || `Session ${sessionNumber}`,
-              description: row.get('additional_explain') || null,
-              pattern_english: row.get('pattern_english'),
-              pattern_korean: row.get('pattern_korean'),
-              metadata: patternAudioUrl ? { pattern_audio_url: patternAudioUrl } : {}
-            })
+            .update(sessionData)
             .eq('id', sessionId);
         } else {
           const { data: newSession, error: sessionError } = await supabaseAdmin
@@ -139,11 +172,7 @@ export async function POST(request: Request) {
             .insert({
               category_id: category.id,
               session_number: sessionNumber,
-              title: row.get('pattern_english') || `Session ${sessionNumber}`,
-              description: row.get('additional_explain') || null,
-              pattern_english: row.get('pattern_english'),
-              pattern_korean: row.get('pattern_korean'),
-              metadata: patternAudioUrl ? { pattern_audio_url: patternAudioUrl } : {}
+              ...sessionData
             })
             .select('id')
             .single();
@@ -154,10 +183,50 @@ export async function POST(request: Request) {
 
         // Insert expressions for this session
         // For News: pattern-level audio, ex1-ex6 examples
+        // For Conversational: pattern-level audio, JSON contents_json
         // For Daily: individual audio files per example
         const expressions = [];
 
-        if (isNewsCategory) {
+        if (isConversationalCategory) {
+          // Conversational Expression: parse JSON contents
+          const contentsJson = row.get('contents_json');
+          console.log('Raw contents_json:', contentsJson);
+
+          if (contentsJson) {
+            try {
+              const contents = JSON.parse(contentsJson);
+              console.log('Parsed contents:', contents);
+              console.log('Contents type:', Array.isArray(contents) ? 'array' : typeof contents);
+              console.log('Contents length:', contents.length);
+
+              contents.forEach((item: any, index: number) => {
+                console.log(`Item ${index}:`, item);
+                // Each item in the array has one ex pair (ex1_en/ex1_kor, ex2_en/ex2_kor, etc.)
+                // Find which ex number this item has
+                for (let i = 1; i <= 10; i++) {
+                  const enKey = `ex${i}_en`;
+                  const korKey = `ex${i}_kor`;
+                  if (item[enKey] && item[korKey]) {
+                    console.log(`Found pair: ${enKey}, ${korKey}`);
+                    expressions.push({
+                      session_id: sessionId,
+                      korean: item[korKey],
+                      english: item[enKey],
+                      audio_url: null, // No individual audio for Conversational examples
+                      display_order: index + 1,
+                      metadata: {}
+                    });
+                    break; // Only one ex pair per item
+                  }
+                }
+              });
+              console.log('Total expressions created:', expressions.length);
+            } catch (error) {
+              console.error('Failed to parse contents_json:', error);
+              console.error('Error details:', error);
+            }
+          }
+        } else if (isNewsCategory) {
           // News Expression: 6 examples without individual audio
           for (let i = 1; i <= 6; i++) {
             const english = row.get(`ex${i}_en`);
