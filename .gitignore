@@ -89,5 +89,9 @@ jspm_packages/
 # TernJS port file
 .tern-port
 
-# Google Cloud
-.gen-lang-client-0458093252-d1cf1f15e2b5.json
+# Google Cloud Service Account Keys
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+gen-lang-client-*.json
