@@ -5,6 +5,7 @@ import { NewsPhrasesScreen } from "@/components/NewsPhrasesScreen";
 import { RealTalkScreen } from "@/components/RealTalkScreen";
 import { RealTalkExamplesScreen } from "@/components/RealTalkExamplesScreen";
 import { ShadowingScreen } from "@/components/ShadowingScreen";
+import { EnglishOrderScreen } from "@/components/EnglishOrderScreen";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/useSession";
@@ -62,6 +63,10 @@ export default function SessionDetailPage() {
 
   if (slug === 'shadowing') {
     return <ShadowingScreen category={category} session={session} />;
+  }
+
+  if (slug === 'english-order') {
+    return <EnglishOrderScreen category={category} session={session} />;
   }
 
   // Default: Daily Phrases

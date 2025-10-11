@@ -72,13 +72,16 @@ export async function POST(request: Request) {
       categorySlug = 'real-talk-examples';
     } else if (sheetName === 'Shadowing') {
       categorySlug = 'shadowing';
+    } else if (sheetName === 'EnglishOrder') {
+      categorySlug = 'english-order';
     } else {
       const audioFolder = pendingRows[0].get('audio-folder');
       const categorySlugMap: Record<string, string> = {
         'daily': 'daily-phrases',
         'news': 'news-phrases',
         'conversational': 'real-talk',
-        'shadowing': 'shadowing'
+        'shadowing': 'shadowing',
+        'english-order': 'english-order'
       };
       categorySlug = categorySlugMap[audioFolder] || audioFolder;
     }
@@ -111,6 +114,7 @@ export async function POST(request: Request) {
         const isConversationalCategory = audioFolder === 'conversational' && sheetName === 'Conversational';
         const isConversationalExCategory = sheetName === 'ConversationalEx';
         const isShadowingCategory = sheetName === 'Shadowing';
+        const isEnglishOrderCategory = sheetName === 'EnglishOrder';
 
         console.log('Processing row:', {
           number: sessionNumber,
@@ -138,8 +142,8 @@ export async function POST(request: Request) {
         // Construct metadata based on category type
         const metadata: any = {};
 
-        // Add pattern audio for News, Conversational, ConversationalEx, and Shadowing
-        if (isNewsCategory || isConversationalCategory || isConversationalExCategory || isShadowingCategory) {
+        // Add pattern audio for News, Conversational, ConversationalEx, Shadowing, and EnglishOrder
+        if (isNewsCategory || isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) {
           const filename = row.get('filename');
           if (filename) {
             metadata.pattern_audio_url = `${audioFolder}/${filename}`;
@@ -168,16 +172,24 @@ export async function POST(request: Request) {
           }
         }
 
-        // For Conversational, ConversationalEx, and Shadowing, use category name as title since there's no pattern
-        const sessionTitle = (isConversationalCategory || isConversationalExCategory || isShadowingCategory)
+        // Add question for EnglishOrder
+        if (isEnglishOrderCategory) {
+          const question = row.get('question');
+          if (question) {
+            metadata.question = question;
+          }
+        }
+
+        // For Conversational, ConversationalEx, Shadowing, and EnglishOrder, use category name as title since there's no pattern
+        const sessionTitle = (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory)
           ? row.get('category') || `Session ${sessionNumber}`
           : row.get('pattern_english') || `Session ${sessionNumber}`;
 
         const sessionData = {
           title: sessionTitle,
           description: row.get('additional_explain') || null,
-          pattern_english: (isConversationalCategory || isConversationalExCategory || isShadowingCategory) ? null : row.get('pattern_english'),
-          pattern_korean: (isConversationalCategory || isConversationalExCategory || isShadowingCategory) ? null : row.get('pattern_korean'),
+          pattern_english: (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) ? null : row.get('pattern_english'),
+          pattern_korean: (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) ? null : row.get('pattern_korean'),
           metadata
         };
 
@@ -208,11 +220,12 @@ export async function POST(request: Request) {
         // For Conversational: pattern-level audio, JSON contents_json
         // For ConversationalEx: pattern-level audio, JSON contents_json (similar to Conversational)
         // For Shadowing: pattern-level audio, JSON contents_json (similar to Conversational)
+        // For EnglishOrder: pattern-level audio, JSON contents_json (similar to Conversational)
         // For Daily: individual audio files per example
         const expressions = [];
 
-        if (isConversationalCategory || isConversationalExCategory || isShadowingCategory) {
-          // Conversational/Shadowing Expression: parse JSON contents
+        if (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) {
+          // Conversational/Shadowing/EnglishOrder Expression: parse JSON contents
           const contentsJson = row.get('contents_json');
           console.log('Raw contents_json:', contentsJson);
 
