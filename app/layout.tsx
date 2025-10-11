@@ -1,4 +1,5 @@
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { DailyStatsProvider } from "@/components/DailyStatsProvider";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <DailyStatsProvider />
         <div className="h-screen flex flex-col bg-white max-w-md mx-auto border-x border-gray-200">
           <div className="flex-1 overflow-hidden">
             {children}
