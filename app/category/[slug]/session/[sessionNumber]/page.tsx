@@ -4,6 +4,7 @@ import { DailyPhrasesScreen } from "@/components/DailyPhrasesScreen";
 import { NewsPhrasesScreen } from "@/components/NewsPhrasesScreen";
 import { RealTalkScreen } from "@/components/RealTalkScreen";
 import { RealTalkExamplesScreen } from "@/components/RealTalkExamplesScreen";
+import { ShadowingScreen } from "@/components/ShadowingScreen";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/useSession";
@@ -57,6 +58,10 @@ export default function SessionDetailPage() {
 
   if (slug === 'real-talk-examples') {
     return <RealTalkExamplesScreen category={category} session={session} />;
+  }
+
+  if (slug === 'shadowing') {
+    return <ShadowingScreen category={category} session={session} />;
   }
 
   // Default: Daily Phrases

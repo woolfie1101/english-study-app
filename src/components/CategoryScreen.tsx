@@ -33,7 +33,8 @@ const SHEET_NAME_MAP: Record<string, string> = {
   'daily-phrases': 'DailyExpression',
   'news-phrases': 'News',
   'real-talk': 'Conversational',
-  'real-talk-examples': 'ConversationalEx'
+  'real-talk-examples': 'ConversationalEx',
+  'shadowing': 'Shadowing'
 };
 
 export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
