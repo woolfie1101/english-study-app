@@ -29,13 +29,14 @@ interface CategoryScreenProps {
 }
 
 // Map category slug to Google Sheet name
+// Sheet names now match category slugs exactly
 const SHEET_NAME_MAP: Record<string, string> = {
-  'daily-phrases': 'DailyExpression',
-  'news-phrases': 'News',
-  'real-talk': 'Conversational',
-  'real-talk-examples': 'ConversationalEx',
-  'shadowing': 'Shadowing',
-  'english-order': 'EnglishOrder'
+  'daily-phrases': 'daily-phrases',
+  'news-phrases': 'news-phrases',
+  'real-talk': 'real-talk',
+  'real-talk-examples': 'real-talk-examples',
+  'shadowing': 'shadowing',
+  'english-order': 'english-order'
 };
 
 export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {

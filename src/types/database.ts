@@ -15,7 +15,8 @@ export interface Database {
           name: string
           slug: string | null
           display_order: number | null
-          total_sessions: number
+          description: string | null
+          metadata: any | null
           icon: string | null
           created_at: string
           updated_at: string
@@ -25,7 +26,8 @@ export interface Database {
           name: string
           slug?: string | null
           display_order?: number | null
-          total_sessions?: number
+          description?: string | null
+          metadata?: any | null
           icon?: string | null
           created_at?: string
           updated_at?: string
@@ -35,7 +37,8 @@ export interface Database {
           name?: string
           slug?: string | null
           display_order?: number | null
-          total_sessions?: number
+          description?: string | null
+          metadata?: any | null
           icon?: string | null
           created_at?: string
           updated_at?: string

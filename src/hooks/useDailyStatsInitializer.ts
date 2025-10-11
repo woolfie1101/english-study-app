@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -6,14 +6,18 @@ import { supabase } from '@/lib/supabase';
  * This ensures that when a new day starts, all categories start with 0 completed sessions
  */
 export function useDailyStatsInitializer(userId: string = '00000000-0000-0000-0000-000000000001') {
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
+    // Only run once per session
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const initializeDailyStats = async () => {
       try {
         // Get today's date in local timezone
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-        console.log('Initializing daily stats for:', today);
 
         // Get all categories
         const { data: categories, error: categoriesError } = await supabase
@@ -67,11 +71,6 @@ export function useDailyStatsInitializer(userId: string = '00000000-0000-0000-00
 
           if (existingStats) {
             // Update existing stats with correct count
-            console.log(`Updating stats for category ${category.id}:`, {
-              completed: actualCompletedCount,
-              total: totalSessions
-            });
-
             await supabase
               .from('daily_study_stats')
               .update({
@@ -81,11 +80,6 @@ export function useDailyStatsInitializer(userId: string = '00000000-0000-0000-00
               .eq('id', existingStats.id);
           } else {
             // Insert new stats with 0 completed (or actual count if any)
-            console.log(`Creating stats for category ${category.id}:`, {
-              completed: actualCompletedCount,
-              total: totalSessions
-            });
-
             await supabase
               .from('daily_study_stats')
               .insert({
@@ -97,8 +91,6 @@ export function useDailyStatsInitializer(userId: string = '00000000-0000-0000-00
               });
           }
         }
-
-        console.log('✅ Daily stats initialized successfully');
       } catch (error) {
         console.error('Error initializing daily stats:', error);
       }

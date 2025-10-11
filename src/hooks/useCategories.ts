@@ -5,6 +5,7 @@ import { Database } from '@/types/database'
 type Category = Database['public']['Tables']['categories']['Row']
 
 interface CategoryWithProgress extends Category {
+  total_sessions: number  // Calculated dynamically from sessions count
   completed: number
   percentage: number
 }

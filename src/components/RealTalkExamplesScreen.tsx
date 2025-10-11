@@ -77,7 +77,7 @@ export function RealTalkExamplesScreen({ category, session }: RealTalkExamplesSc
   const handleGoToRealTalk = () => {
     if (conversationalNum) {
       // Navigate to the corresponding Real Talk session
-      router.push(`/category/conversational-expression/session/${conversationalNum}`);
+      router.push(`/category/real-talk/session/${conversationalNum}`);
     }
   };
 

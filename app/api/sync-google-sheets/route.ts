@@ -64,27 +64,9 @@ export async function POST(request: Request) {
       });
     }
 
-    // Map audio-folder to category slug
-    // For RealTalkExamples sheet, always use real-talk-examples category
-    // even if audio-folder is 'conversational' (since they share the same audio folder)
-    let categorySlug: string;
-    if (sheetName === 'ConversationalEx') {
-      categorySlug = 'real-talk-examples';
-    } else if (sheetName === 'Shadowing') {
-      categorySlug = 'shadowing';
-    } else if (sheetName === 'EnglishOrder') {
-      categorySlug = 'english-order';
-    } else {
-      const audioFolder = pendingRows[0].get('audio-folder');
-      const categorySlugMap: Record<string, string> = {
-        'daily': 'daily-phrases',
-        'news': 'news-phrases',
-        'conversational': 'real-talk',
-        'shadowing': 'shadowing',
-        'english-order': 'english-order'
-      };
-      categorySlug = categorySlugMap[audioFolder] || audioFolder;
-    }
+    // Map sheet name to category slug
+    // Sheet names now match category slugs exactly
+    const categorySlug = sheetName;
     console.log('Looking for category with slug:', categorySlug);
 
     const { data: category, error: categoryError } = await supabaseAdmin
@@ -110,18 +92,17 @@ export async function POST(request: Request) {
         const sessionNumber = parseInt(row.get('number'));
         const audioFolder = row.get('audio-folder');
         const imageFolder = row.get('image-folder') || audioFolder; // Default to audio folder if not specified
-        const isNewsCategory = audioFolder === 'news';
-        const isConversationalCategory = audioFolder === 'conversational' && sheetName === 'Conversational';
-        const isConversationalExCategory = sheetName === 'ConversationalEx';
-        const isShadowingCategory = sheetName === 'Shadowing';
-        const isEnglishOrderCategory = sheetName === 'EnglishOrder';
+        const isNewsCategory = sheetName === 'news-phrases';
+        const isRealTalkCategory = sheetName === 'real-talk';
+        const isRealTalkExamplesCategory = sheetName === 'real-talk-examples';
+        const isShadowingCategory = sheetName === 'shadowing';
+        const isEnglishOrderCategory = sheetName === 'english-order';
 
         console.log('Processing row:', {
           number: sessionNumber,
-          category: row.get('category'),
           audio_folder: audioFolder,
           sheet_name: sheetName,
-          isConversationalEx: isConversationalExCategory,
+          isRealTalkExamples: isRealTalkExamplesCategory,
           pattern_english: row.get('pattern_english'),
           pattern_korean: row.get('pattern_korean'),
           contents_json: row.get('contents_json') ? 'present' : 'missing',
@@ -142,16 +123,16 @@ export async function POST(request: Request) {
         // Construct metadata based on category type
         const metadata: any = {};
 
-        // Add pattern audio for News, Conversational, ConversationalEx, Shadowing, and EnglishOrder
-        if (isNewsCategory || isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) {
+        // Add pattern audio for News, Real Talk, Real Talk Examples, Shadowing, and English Order
+        if (isNewsCategory || isRealTalkCategory || isRealTalkExamplesCategory || isShadowingCategory || isEnglishOrderCategory) {
           const filename = row.get('filename');
           if (filename) {
             metadata.pattern_audio_url = `${audioFolder}/${filename}`;
           }
         }
 
-        // Add images for Conversational
-        if (isConversationalCategory) {
+        // Add images for Real Talk
+        if (isRealTalkCategory) {
           const images: string[] = [];
           const image1 = row.get('image1');
           const image2 = row.get('image2');
@@ -164,15 +145,15 @@ export async function POST(request: Request) {
           }
         }
 
-        // Add conversational_num for ConversationalEx
-        if (isConversationalExCategory) {
+        // Add conversational_num for Real Talk Examples
+        if (isRealTalkExamplesCategory) {
           const conversationalNum = row.get('conversational_num');
           if (conversationalNum) {
             metadata.conversational_num = parseInt(conversationalNum);
           }
         }
 
-        // Add question for EnglishOrder
+        // Add question for English Order
         if (isEnglishOrderCategory) {
           const question = row.get('question');
           if (question) {
@@ -180,16 +161,16 @@ export async function POST(request: Request) {
           }
         }
 
-        // For Conversational, ConversationalEx, Shadowing, and EnglishOrder, use category name as title since there's no pattern
-        const sessionTitle = (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory)
-          ? row.get('category') || `Session ${sessionNumber}`
+        // For Real Talk, Real Talk Examples, Shadowing, and English Order, use session number as title since there's no pattern
+        const sessionTitle = (isRealTalkCategory || isRealTalkExamplesCategory || isShadowingCategory || isEnglishOrderCategory)
+          ? `Session ${sessionNumber}`
           : row.get('pattern_english') || `Session ${sessionNumber}`;
 
         const sessionData = {
           title: sessionTitle,
           description: row.get('additional_explain') || null,
-          pattern_english: (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) ? null : row.get('pattern_english'),
-          pattern_korean: (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) ? null : row.get('pattern_korean'),
+          pattern_english: (isRealTalkCategory || isRealTalkExamplesCategory || isShadowingCategory || isEnglishOrderCategory) ? null : row.get('pattern_english'),
+          pattern_korean: (isRealTalkCategory || isRealTalkExamplesCategory || isShadowingCategory || isEnglishOrderCategory) ? null : row.get('pattern_korean'),
           metadata
         };
 
@@ -217,15 +198,15 @@ export async function POST(request: Request) {
 
         // Insert expressions for this session
         // For News: pattern-level audio, ex1-ex6 examples
-        // For Conversational: pattern-level audio, JSON contents_json
-        // For ConversationalEx: pattern-level audio, JSON contents_json (similar to Conversational)
-        // For Shadowing: pattern-level audio, JSON contents_json (similar to Conversational)
-        // For EnglishOrder: pattern-level audio, JSON contents_json (similar to Conversational)
+        // For Real Talk: pattern-level audio, JSON contents_json
+        // For Real Talk Examples: pattern-level audio, JSON contents_json (similar to Real Talk)
+        // For Shadowing: pattern-level audio, JSON contents_json (similar to Real Talk)
+        // For English Order: pattern-level audio, JSON contents_json (similar to Real Talk)
         // For Daily: individual audio files per example
         const expressions = [];
 
-        if (isConversationalCategory || isConversationalExCategory || isShadowingCategory || isEnglishOrderCategory) {
-          // Conversational/Shadowing/EnglishOrder Expression: parse JSON contents
+        if (isRealTalkCategory || isRealTalkExamplesCategory || isShadowingCategory || isEnglishOrderCategory) {
+          // Real Talk/Real Talk Examples/Shadowing/English Order Expression: parse JSON contents
           const contentsJson = row.get('contents_json');
           console.log('Raw contents_json:', contentsJson);
 
@@ -249,7 +230,7 @@ export async function POST(request: Request) {
                       session_id: sessionId,
                       korean: item[korKey],
                       english: item[enKey],
-                      audio_url: null, // No individual audio for Conversational examples
+                      audio_url: null, // No individual audio for these examples
                       display_order: index + 1,
                       metadata: {}
                     });
@@ -264,19 +245,42 @@ export async function POST(request: Request) {
             }
           }
         } else if (isNewsCategory) {
-          // News Expression: 6 examples without individual audio
-          for (let i = 1; i <= 6; i++) {
-            const english = row.get(`ex${i}_en`);
-            const korean = row.get(`ex${i}_kor`);
-            if (english && korean) {
-              expressions.push({
-                session_id: sessionId,
-                korean,
-                english,
-                audio_url: null, // No individual audio for News examples
-                display_order: i,
-                metadata: {}
+          // News Expression: parse JSON contents (same format as Real Talk)
+          const contentsJson = row.get('contents_json');
+          console.log('Raw contents_json:', contentsJson);
+
+          if (contentsJson) {
+            try {
+              const contents = JSON.parse(contentsJson);
+              console.log('Parsed contents:', contents);
+              console.log('Contents type:', Array.isArray(contents) ? 'array' : typeof contents);
+              console.log('Contents length:', contents.length);
+
+              contents.forEach((item: any, index: number) => {
+                console.log(`Item ${index}:`, item);
+                // Each item in the array has one ex pair (ex1_en/ex1_kor, ex2_en/ex2_kor, etc.)
+                // Find which ex number this item has
+                for (let i = 1; i <= 10; i++) {
+                  const enKey = `ex${i}_en`;
+                  const korKey = `ex${i}_kor`;
+                  if (item[enKey] && item[korKey]) {
+                    console.log(`Found pair: ${enKey}, ${korKey}`);
+                    expressions.push({
+                      session_id: sessionId,
+                      korean: item[korKey],
+                      english: item[enKey],
+                      audio_url: null, // No individual audio for News examples
+                      display_order: index + 1,
+                      metadata: {}
+                    });
+                    break; // Only one ex pair per item
+                  }
+                }
               });
+              console.log('Total expressions created:', expressions.length);
+            } catch (error) {
+              console.error('Failed to parse contents_json:', error);
+              console.error('Error details:', error);
             }
           }
         } else {
