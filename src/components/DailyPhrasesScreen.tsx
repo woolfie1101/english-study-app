@@ -36,7 +36,6 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
     getCompletedExpressions,
     completeSession,
     updateDailyStats,
-    loading
   } = useProgress();
 
   // TODO: Replace with actual user authentication
@@ -52,6 +51,7 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
   );
 
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
+  const [savingExpressions, setSavingExpressions] = useState<Set<string>>(new Set());
 
   // Load completed expressions on mount
   useEffect(() => {
@@ -71,8 +71,26 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
   }, [session.id]);
 
   const handleCompleteExpression = async (expressionId: string) => {
+    console.log('🔵 Starting to complete expression:', expressionId.substring(0, 8));
     try {
-      // Optimistic update
+      // Mark as saving
+      setSavingExpressions(prev => {
+        const newSet = new Set(prev).add(expressionId);
+        console.log('🟡 Saving expressions:', Array.from(newSet).map(id => id.substring(0, 8)));
+        return newSet;
+      });
+
+      // Save to Supabase
+      console.log('💾 Calling completeExpression API...');
+      await completeExpression(
+        userId,
+        expressionId,
+        session.id,
+        category.id
+      );
+      console.log('✅ API call completed');
+
+      // Update status to completed
       setExpressionsWithStatus(prev =>
         prev.map(exp =>
           exp.id === expressionId
@@ -81,24 +99,22 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
         )
       );
 
-      // Save to Supabase
-      await completeExpression(
-        userId,
-        expressionId,
-        session.id,
-        category.id
-      );
+      // Remove from saving state
+      setSavingExpressions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(expressionId);
+        console.log('🟢 Removed from saving. Remaining:', Array.from(newSet).map(id => id.substring(0, 8)));
+        return newSet;
+      });
     } catch (error) {
-      console.error('Failed to complete expression:', error);
+      console.error('❌ Failed to complete expression:', error);
 
-      // Revert on error
-      setExpressionsWithStatus(prev =>
-        prev.map(exp =>
-          exp.id === expressionId
-            ? { ...exp, completed: false }
-            : exp
-        )
-      );
+      // Remove from saving state
+      setSavingExpressions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(expressionId);
+        return newSet;
+      });
 
       alert('Failed to save progress. Please try again.');
     }
@@ -219,14 +235,14 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
                 
                 <Button
                   onClick={() => handleCompleteExpression(expression.id)}
-                  disabled={expression.completed || loading}
+                  disabled={expression.completed || savingExpressions.has(expression.id)}
                   className={`w-full ${
                     expression.completed
                       ? 'bg-green-500 text-white'
                       : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
                 >
-                  {loading ? 'Saving...' : expression.completed ? '✅ Completed' : 'Complete'}
+                  {savingExpressions.has(expression.id) ? 'Saving...' : expression.completed ? '✅ Completed' : 'Complete'}
                 </Button>
               </div>
             </Card>

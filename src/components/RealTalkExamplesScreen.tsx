@@ -30,7 +30,6 @@ export function RealTalkExamplesScreen({ category, session }: RealTalkExamplesSc
   const {
     completeSession,
     updateDailyStats,
-    loading
   } = useProgress();
 
   // TODO: Replace with actual user authentication
@@ -43,15 +42,19 @@ export function RealTalkExamplesScreen({ category, session }: RealTalkExamplesSc
 
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const handleCompleteSession = async () => {
     try {
+      setIsCompleting(true);
       await completeSession(userId, session.id, category.id);
       await updateDailyStats(userId, category.id);
       setSessionCompleted(true);
     } catch (error) {
       console.error('Failed to complete session:', error);
       alert('Failed to save progress. Please try again.');
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -74,7 +77,7 @@ export function RealTalkExamplesScreen({ category, session }: RealTalkExamplesSc
   const handleGoToRealTalk = () => {
     if (conversationalNum) {
       // Navigate to the corresponding Real Talk session
-      router.push(`/category/real-talk/session/${conversationalNum}`);
+      router.push(`/category/conversational-expression/session/${conversationalNum}`);
     }
   };
 
@@ -151,10 +154,10 @@ export function RealTalkExamplesScreen({ category, session }: RealTalkExamplesSc
         {!sessionCompleted && (
           <Button
             onClick={handleCompleteSession}
-            disabled={loading}
+            disabled={isCompleting}
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
           >
-            {loading ? 'Saving...' : 'Complete Session'}
+            {isCompleting ? 'Saving...' : 'Complete Session'}
           </Button>
         )}
 

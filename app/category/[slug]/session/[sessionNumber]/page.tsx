@@ -48,16 +48,16 @@ export default function SessionDetailPage() {
     return null;
   }
 
-  // Use different screen based on category
-  if (slug === 'news-phrases') {
+  // Use different screen based on category slug
+  if (slug === 'news-expression') {
     return <NewsPhrasesScreen category={category} session={session} />;
   }
 
-  if (slug === 'real-talk') {
+  if (slug === 'conversational-expression') {
     return <RealTalkScreen category={category} session={session} />;
   }
 
-  if (slug === 'real-talk-examples') {
+  if (slug === 'conversational-ex-expression') {
     return <RealTalkExamplesScreen category={category} session={session} />;
   }
 
@@ -69,6 +69,6 @@ export default function SessionDetailPage() {
     return <EnglishOrderScreen category={category} session={session} />;
   }
 
-  // Default: Daily Phrases
+  // Default: Daily Phrases (daily-expression)
   return <DailyPhrasesScreen category={category} session={session} />;
 }

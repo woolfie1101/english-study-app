@@ -30,7 +30,6 @@ export function ShadowingScreen({ category, session }: ShadowingScreenProps) {
   const {
     completeSession,
     updateDailyStats,
-    loading
   } = useProgress();
 
   // TODO: Replace with actual user authentication
@@ -42,15 +41,19 @@ export function ShadowingScreen({ category, session }: ShadowingScreenProps) {
 
   const [showEnglish, setShowEnglish] = useState<Record<string, boolean>>({});
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const handleCompleteSession = async () => {
     try {
+      setIsCompleting(true);
       await completeSession(userId, session.id, category.id);
       await updateDailyStats(userId, category.id);
       setSessionCompleted(true);
     } catch (error) {
       console.error('Failed to complete session:', error);
       alert('Failed to save progress. Please try again.');
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -135,10 +138,10 @@ export function ShadowingScreen({ category, session }: ShadowingScreenProps) {
         {!sessionCompleted && (
           <Button
             onClick={handleCompleteSession}
-            disabled={loading}
+            disabled={isCompleting}
             className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
           >
-            {loading ? 'Saving...' : 'Complete Session'}
+            {isCompleting ? 'Saving...' : 'Complete Session'}
           </Button>
         )}
 

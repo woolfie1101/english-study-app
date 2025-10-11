@@ -30,7 +30,6 @@ export function NewsPhrasesScreen({ category, session }: NewsPhrasesScreenProps)
   const {
     completeSession,
     updateDailyStats,
-    loading
   } = useProgress();
 
   // TODO: Replace with actual user authentication
@@ -46,15 +45,19 @@ export function NewsPhrasesScreen({ category, session }: NewsPhrasesScreenProps)
 
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const handleCompleteSession = async () => {
     try {
+      setIsCompleting(true);
       await completeSession(userId, session.id, category.id);
       await updateDailyStats(userId, category.id);
       setSessionCompleted(true);
     } catch (error) {
       console.error('Failed to complete session:', error);
       alert('Failed to save progress. Please try again.');
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -154,10 +157,10 @@ export function NewsPhrasesScreen({ category, session }: NewsPhrasesScreenProps)
         {!sessionCompleted && (
           <Button
             onClick={handleCompleteSession}
-            disabled={loading}
+            disabled={isCompleting}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white"
           >
-            {loading ? 'Saving...' : 'Complete Session'}
+            {isCompleting ? 'Saving...' : 'Complete Session'}
           </Button>
         )}
 
