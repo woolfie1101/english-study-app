@@ -168,7 +168,7 @@ export function NewsPhrasesScreen({ category, session }: NewsPhrasesScreenProps)
         {sessionCompleted && (
           <Button
             onClick={handleNextSession}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />

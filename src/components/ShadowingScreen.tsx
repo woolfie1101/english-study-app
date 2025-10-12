@@ -149,7 +149,7 @@ export function ShadowingScreen({ category, session }: ShadowingScreenProps) {
         {sessionCompleted && (
           <Button
             onClick={handleNextSession}
-            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />

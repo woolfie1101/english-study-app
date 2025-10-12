@@ -57,14 +57,10 @@ export function useSession(slug: string, sessionNumber: number) {
 
         if (expressionsError) throw expressionsError
 
-        // Add category slug to audio URLs (AudioPlayer will construct full URL)
+        // Audio URLs are already in full path format from database
         const category = (sessionData as any).categories as Category
-        const categorySlug = category?.slug || 'daily-expression'
 
-        const expressionsWithPaths = expressionsData?.map(exp => ({
-          ...exp,
-          audio_url: exp.audio_url ? `${categorySlug}/${exp.audio_url}` : null
-        })) || []
+        const expressionsWithPaths = expressionsData || []
 
         const sessionWithExpressions: SessionWithExpressions = {
           ...sessionData,

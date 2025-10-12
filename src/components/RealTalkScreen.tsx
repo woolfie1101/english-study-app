@@ -177,7 +177,7 @@ export function RealTalkScreen({ category, session }: RealTalkScreenProps) {
         {sessionCompleted && (
           <Button
             onClick={handleNextSession}
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />

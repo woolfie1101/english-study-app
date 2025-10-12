@@ -160,7 +160,7 @@ export function EnglishOrderScreen({ category, session }: EnglishOrderScreenProp
         {sessionCompleted && (
           <Button
             onClick={handleNextSession}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />

@@ -245,9 +245,13 @@ export async function POST(request: Request) {
             }
           }
         } else if (isNewsCategory) {
-          // News Expression: parse JSON contents (same format as Real Talk)
+          // News Expression: parse JSON contents and use pattern audio for all expressions
           const contentsJson = row.get('contents_json');
+          const filename = row.get('filename');
+          const patternAudioUrl = filename ? `${audioFolder}/${filename}` : null;
+
           console.log('Raw contents_json:', contentsJson);
+          console.log('Pattern audio URL:', patternAudioUrl);
 
           if (contentsJson) {
             try {
@@ -269,7 +273,7 @@ export async function POST(request: Request) {
                       session_id: sessionId,
                       korean: item[korKey],
                       english: item[enKey],
-                      audio_url: null, // No individual audio for News examples
+                      audio_url: patternAudioUrl, // Use pattern audio for all News expressions
                       display_order: index + 1,
                       metadata: {}
                     });

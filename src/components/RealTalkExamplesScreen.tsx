@@ -165,7 +165,7 @@ export function RealTalkExamplesScreen({ category, session }: RealTalkExamplesSc
         {sessionCompleted && (
           <Button
             onClick={handleNextSession}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex items-center justify-center space-x-2"
+            className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center space-x-2"
           >
             <span>Next Session</span>
             <ArrowRight className="w-4 h-4" />
