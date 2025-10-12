@@ -98,5 +98,4 @@ gen-lang-client-*.json
 
 # Deployment scripts with sensitive data
 deploy.sh
-deploy-with-env.sh
 DEPLOYMENT_GUIDE.md
