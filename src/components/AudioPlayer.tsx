@@ -16,18 +16,33 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Construct Supabase Storage URL
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mltoqwqobwbzgqutvclv.supabase.co';
   const fullAudioUrl = audioUrl && supabaseUrl
     ? `${supabaseUrl}/storage/v1/object/public/audio-files/${audioUrl}`
     : '';
 
+  // Debug logging
   useEffect(() => {
-    if (!fullAudioUrl) return;
+    console.log('AudioPlayer Debug:', {
+      audioUrl,
+      supabaseUrl,
+      fullAudioUrl,
+      env: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasEnv: !!process.env.NEXT_PUBLIC_SUPABASE_URL
+    });
+  }, [audioUrl, supabaseUrl, fullAudioUrl]);
+
+  useEffect(() => {
+    if (!fullAudioUrl) {
+      console.error('No audio URL provided');
+      return;
+    }
 
     const audio = new Audio(fullAudioUrl);
     audio.loop = isLooping;
 
     const handleLoadedMetadata = () => {
+      console.log('Audio loaded successfully:', fullAudioUrl);
       setActualDuration(audio.duration);
     };
 
@@ -42,9 +57,33 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
       }
     };
 
+    const handleError = (e: ErrorEvent) => {
+      console.error('Audio loading error:', {
+        url: fullAudioUrl,
+        error: e,
+        audioError: audio.error,
+        readyState: audio.readyState,
+        networkState: audio.networkState
+      });
+    };
+
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    // Test if URL is accessible
+    fetch(fullAudioUrl, { method: 'HEAD' })
+      .then(response => {
+        console.log('Audio URL test:', {
+          url: fullAudioUrl,
+          status: response.status,
+          contentType: response.headers.get('content-type')
+        });
+      })
+      .catch(err => {
+        console.error('Audio URL not accessible:', err);
+      });
 
     audioRef.current = audio;
 
@@ -52,6 +91,7 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
       audio.pause();
     };
   }, [fullAudioUrl, isLooping]);
