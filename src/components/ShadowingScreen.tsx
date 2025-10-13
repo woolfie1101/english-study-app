@@ -39,7 +39,7 @@ export function ShadowingScreen({ category, session }: ShadowingScreenProps) {
   const metadata = session.metadata as any;
   const patternAudioUrl = metadata?.pattern_audio_url || '';
 
-  const [showEnglish, setShowEnglish] = useState<Record<string, boolean>>({});
+  const [showKorean, setShowKorean] = useState<Record<string, boolean>>({});
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -113,18 +113,18 @@ export function ShadowingScreen({ category, session }: ShadowingScreenProps) {
                 <div className="flex items-start space-x-2">
                   <span className="text-indigo-600 font-semibold text-sm min-w-[24px]">{index + 1}.</span>
                   <div className="flex-1 space-y-2">
-                    {/* Korean text - always visible */}
-                    <p className="text-base text-gray-900 bg-gray-50 p-3 rounded-lg">{expression.korean}</p>
+                    {/* English text - always visible */}
+                    <p className="text-base text-gray-900 bg-gray-50 p-3 rounded-lg">{expression.english}</p>
 
-                    {/* English text - hidden by default, click to reveal */}
+                    {/* Korean text - hidden by default, click to reveal */}
                     <div
-                      onClick={() => setShowEnglish(prev => ({ ...prev, [expression.id]: !prev[expression.id] }))}
+                      onClick={() => setShowKorean(prev => ({ ...prev, [expression.id]: !prev[expression.id] }))}
                       className="cursor-pointer"
                     >
-                      {showEnglish[expression.id] ? (
-                        <p className="pl-4 border-l-2 border-indigo-300 text-gray-700">{expression.english}</p>
+                      {showKorean[expression.id] ? (
+                        <p className="pl-4 border-l-2 border-indigo-300 text-gray-700">{expression.korean}</p>
                       ) : (
-                        <p className="pl-4 border-l-2 border-indigo-300 text-gray-400">클릭하여 영어 보기</p>
+                        <p className="pl-4 border-l-2 border-indigo-300 text-gray-400">클릭하여 한글 보기</p>
                       )}
                     </div>
                   </div>
