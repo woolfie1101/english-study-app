@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getLocalDateTimeString, getLocalDateString, extractLocalDateString } from '@/lib/utils';
 
 export function useProgress() {
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ export function useProgress() {
 
     try {
       // Use upsert to handle duplicates - update completed_at to today
+      // Store date in local timezone to avoid UTC/local mismatch
       const { data, error } = await supabase
         .from('user_expression_progress')
         .upsert({
@@ -28,7 +30,7 @@ export function useProgress() {
           expression_id: expressionId,
           session_id: sessionId,
           category_id: categoryId,
-          completed_at: new Date().toISOString(),
+          completed_at: getLocalDateTimeString(),
         }, {
           onConflict: 'user_id,expression_id',
           ignoreDuplicates: false
@@ -72,13 +74,11 @@ export function useProgress() {
       if (error) throw error;
 
       // Filter by today's date in local timezone
-      const now = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const today = getLocalDateString();
 
       const todayCompleted = (data || []).filter(item => {
         if (!item.completed_at) return false;
-        const completedDate = new Date(item.completed_at);
-        const completedDateStr = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}-${String(completedDate.getDate()).padStart(2, '0')}`;
+        const completedDateStr = extractLocalDateString(item.completed_at);
         return completedDateStr === today;
       });
 
@@ -142,7 +142,7 @@ export function useProgress() {
           .from('user_session_progress')
           .update({
             status: 'completed',
-            completed_at: new Date().toISOString(),
+            completed_at: getLocalDateTimeString(),
           })
           .eq('id', existing.id)
           .select()
@@ -159,7 +159,7 @@ export function useProgress() {
             session_id: sessionId,
             category_id: categoryId,
             status: 'completed',
-            completed_at: new Date().toISOString(),
+            completed_at: getLocalDateTimeString(),
           })
           .select()
           .single();
@@ -212,16 +212,10 @@ export function useProgress() {
 
     try {
       // Use local timezone to avoid date shift
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const today = `${year}-${month}-${day}`; // YYYY-MM-DD in local timezone
+      const today = getLocalDateString();
 
       console.log('=== Daily Stats Update ===');
-      console.log('Current Date Object:', now);
       console.log('Formatted Date (Local):', today);
-      console.log('ISO String:', now.toISOString());
 
       // Get ACTUAL total sessions count for this category
       // Don't trust categories.total_sessions - count directly from sessions table
@@ -246,8 +240,7 @@ export function useProgress() {
       // Filter by today's date in local timezone
       const todayCompleted = completedSessions?.filter(session => {
         if (!session.completed_at) return false;
-        const completedDate = new Date(session.completed_at);
-        const completedDateStr = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}-${String(completedDate.getDate()).padStart(2, '0')}`;
+        const completedDateStr = extractLocalDateString(session.completed_at);
         return completedDateStr === today;
       }) || [];
 
