@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
+import { audioManager } from "@/lib/audioManager";
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -52,9 +53,7 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
 
     const handleEnded = () => {
       setIsPlaying(false);
-      if (!isLooping) {
-        setCurrentTime(0);
-      }
+      setCurrentTime(0);
     };
 
     const handleError = (e: ErrorEvent) => {
@@ -94,7 +93,7 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
       audio.removeEventListener('error', handleError);
       audio.pause();
     };
-  }, [fullAudioUrl, isLooping]);
+  }, [fullAudioUrl]); // Remove isLooping from dependencies
 
   const togglePlay = async () => {
     if (!audioRef.current) return;
@@ -102,8 +101,14 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      audioManager.clearCurrentAudio(audioRef.current);
     } else {
       try {
+        // Register this audio with the global manager
+        audioManager.setCurrentAudio(audioRef.current, () => {
+          setIsPlaying(false);
+        });
+
         await audioRef.current.play();
         setIsPlaying(true);
       } catch (error) {
@@ -113,9 +118,14 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
   };
 
   const toggleLoop = () => {
-    setIsLooping(!isLooping);
+    const newLoopState = !isLooping;
+    setIsLooping(newLoopState);
+
     if (audioRef.current) {
-      audioRef.current.loop = !isLooping;
+      audioRef.current.loop = newLoopState;
+
+      // If audio is currently playing, keep it playing
+      // Just update the loop property without interrupting playback
     }
   };
 
@@ -163,10 +173,14 @@ export function AudioPlayer({ audioUrl, duration }: AudioPlayerProps) {
       </div>
       
       <Button
-        variant="ghost"
+        variant={isLooping ? "default" : "ghost"}
         size="sm"
         onClick={toggleLoop}
-        className={`p-2 ${isLooping ? 'text-blue-500' : 'text-gray-500'}`}
+        className={`p-2 transition-all ${
+          isLooping
+            ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-md'
+            : 'text-gray-500 hover:text-gray-700'
+        }`}
       >
         <RotateCcw className="w-4 h-4" />
       </Button>
