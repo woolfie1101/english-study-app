@@ -81,7 +81,220 @@
 - [x] UI 업데이트 (Auto-play, Reminder, Daily goal, Dark mode, Reminder time)
 - [x] 진행 상황 초기화 기능 (Reset Progress with confirmation modal)
 
-## 🐛 Phase 4: 품질 개선
+## 🎯 Phase 4: Grammar & Word 카테고리 추가
+
+### 📋 개요
+Grammar와 Word 카테고리는 기존 MVP(Daily Phrases, Real Talk 등)와 다른 **계층적 구조**를 가집니다.
+- **기존 MVP**: Session → Expression 리스트 (평면적)
+- **Grammar/Word**: Session → Section → Subsection → Concept → Examples (계층적)
+
+### 📊 Google Sheets 구조 (STEP 1 - 데이터 준비)
+
+#### 컬럼 구조
+```
+session_number | section_number | section_title | subsection | concept | explanation | ex_en | ex_ko | note
+```
+
+#### 컬럼 설명
+- `session_number`: 세션 번호 (1, 2, 3, ...)
+- `section_number`: 섹션 번호 (1, 2, 3, ...)
+- `section_title`: 섹션 제목 ("전치사란?", "시간 전치사", ...)
+- `subsection`: 서브섹션 ID ("2-1", "2-2", NULL)
+- `concept`: 개념 이름 ("at", "on", "in", "since", "for", ...)
+- `explanation`: 개념 설명 (마크업 문법 사용 가능)
+- `ex_en`: 영어 예문
+- `ex_ko`: 한글 뜻/설명
+- `note`: 추가 설명 (예외 사항, 팁 등)
+
+#### 실제 데이터 예시 (전치사)
+```
+1 | 1 | 전치사란? | NULL | 정의 | 명사의 앞에 나와서 시간, 장소, 방향 등등 {b:'어떤 관계'}에 대해 설명하는 말 | The vase is on the table. | 장소 | NULL
+1 | 2 | 시간 전치사 | 2-1 | at | 특정 시점에 사용 {r:(시계에 점 찍기!)} - 24시간 보다 짧 | at 3 O'clock | NULL | NULL
+1 | 2 | 시간 전치사 | 2-1 | on | 날짜, 요일, 기념일 {r:(달력에 O 표시!)} - 24시간 | on Monday | NULL | NULL
+1 | 2 | 시간 전치사 | 2-1 | in | 주, 월, 연도 {r:(하루 이상의 긴 시간)} - 24시간 보다 긴 | in May | NULL | {y:(예외: morning, evening, afternoon은 in을 쓴다)}
+1 | 2 | 시간 전치사 | 2-2 | since | 특정한 과거 시점부터 지금까지 {g:("언제부터?")} | since yesterday | NULL | NULL
+1 | 2 | 시간 전치사 | 2-2 | for | 어떤 기간 동안 {g:("얼마나 오래?")} - 구체적인 시간, 숫자와 사용 | for two hours | NULL | NULL
+```
+
+#### 텍스트 마크업 문법 (중요!)
+강조하고 싶은 텍스트는 색상 마크업 사용:
+- `{r:텍스트}` - 빨강 (중요한 포인트)
+- `{b:텍스트}` - 파랑 (핵심 개념)
+- `{g:텍스트}` - 초록 (긍정적 예시)
+- `{y:텍스트}` - 노랑 (예외 사항)
+- `{p:텍스트}` - 보라 (추가 팁)
+
+**참고 문서**: [MARKUP_SYNTAX.md](./MARKUP_SYNTAX.md)
+
+---
+
+### 🎨 UI 구성 (STEP 2 - UI 설계)
+
+#### A. CategoriesScreen (변경 최소)
+```
+Categories
+├── Daily Phrases ✓
+├── News Phrases ✓
+├── Real Talk ✓
+├── Grammar ← 새로 추가
+└── Word ← 새로 추가
+```
+
+#### B. GrammarScreen (새로운 UI)
+```
+┌─────────────────────────────────────┐
+│ ← Grammar                    🔄     │  ← Header
+├─────────────────────────────────────┤
+│                                     │
+│  📚 Session 1: 전치사               │  ← Session Title
+│                                     │
+│  ┌──────────────────────────────┐  │
+│  │ 1. 전치사란? ✓                │  │  ← Section (완료)
+│  │                               │  │
+│  │ 정의: 명사의 앞에 나와서...   │  │
+│  │ • The vase is on the table.   │  │
+│  │   → 장소                      │  │
+│  └──────────────────────────────┘  │
+│                                     │
+│  ┌──────────────────────────────┐  │
+│  │ 2. 시간 전치사 ▼               │  │  ← Section (확장됨)
+│  │                               │  │
+│  │  📌 2-1. at/on/in             │  │  ← Subsection
+│  │                               │  │
+│  │  • at                         │  │  ← Concept
+│  │    특정 시점에 사용           │  │
+│  │    (시계에 점 찍기!) ← 빨강   │  │
+│  │    ex) at 3 o'clock           │  │
+│  │                               │  │
+│  │  • on                         │  │
+│  │    날짜, 요일, 기념일          │  │
+│  │    (달력에 O 표시!) ← 빨강    │  │
+│  │    ex) on Monday              │  │
+│  │                               │  │
+│  │  • in                         │  │
+│  │    주, 월, 연도               │  │
+│  │    ex) in May                 │  │
+│  │    ⚠️ 예외: morning은 in 사용 │  │
+│  │                               │  │
+│  │  📌 2-2. since/for            │  │
+│  │  ...                          │  │
+│  │                               │  │
+│  │  [✓ 이 섹션 완료하기]          │  │
+│  └──────────────────────────────┘  │
+│                                     │
+│  ┌──────────────────────────────┐  │
+│  │ 3. 장소 전치사 ▶               │  │  ← Section (접힘)
+│  └──────────────────────────────┘  │
+│                                     │
+│  [Next Session →]                   │
+└─────────────────────────────────────┘
+```
+
+#### UI 특징
+- 📖 **읽기 중심**: 스크롤하며 학습
+- 🎯 **섹션별 체크**: 각 섹션을 읽었는지 체크
+- 📱 **Accordion UI**: 섹션 펼치기/접기
+- 🎨 **색상 강조**: 마크업된 텍스트는 색상 표시
+- ✅ **진행도 추적**: 섹션 완료 체크
+
+---
+
+### 🗂️ 데이터베이스 구조 (STEP 3 - DB 스키마)
+
+#### 기존 테이블 활용
+- `categories` 테이블: Grammar, Word 카테고리 추가
+- `sessions` 테이블: metadata에 섹션 구조 저장
+- `expressions` 테이블: metadata에 concept, explanation 저장
+
+#### sessions.metadata 구조
+```json
+{
+  "type": "grammar",
+  "sections": [
+    { "id": "1", "title": "전치사란?", "order": 1 },
+    { "id": "2", "title": "시간 전치사", "order": 2, "subsections": ["2-1", "2-2"] },
+    { "id": "3", "title": "장소 전치사", "order": 3 },
+    { "id": "4", "title": "방향 전치사", "order": 4 }
+  ]
+}
+```
+
+#### expressions.metadata 구조
+```json
+{
+  "section_id": "2",
+  "subsection_id": "2-1",
+  "concept": "at",
+  "explanation": "특정 시점에 사용 {r:(시계에 점 찍기!)} - 24시간 보다 짧",
+  "note": null,
+  "type": "example"
+}
+```
+
+---
+
+### ✅ 작업 순서 (Implementation Plan)
+
+#### STEP 1: 데이터 준비 ✋ **[현재 단계 - 수동 작업]**
+- [ ] Google Sheets에 `grammar` 시트 생성
+- [ ] 컬럼 구조 설정 (위 구조 참고)
+- [ ] 전치사 데이터 입력 (마크업 문법 사용)
+- [ ] Google Sheets에 `word` 시트 생성 (선택)
+- [ ] Word 데이터 입력 (선택)
+
+#### STEP 2: 데이터베이스 확장
+- [ ] `categories` 테이블에 Grammar, Word 카테고리 추가
+  ```sql
+  INSERT INTO categories (name, slug, display_order, description, icon)
+  VALUES
+    ('Grammar', 'grammar', 4, 'Learn English grammar concepts', '📚'),
+    ('Word', 'word', 5, 'Expand your vocabulary', '📖');
+  ```
+
+#### STEP 3: Google Sheets API 확장
+- [ ] `/api/sync-google-sheets` API 수정
+  - [ ] grammar 시트 파싱 로직 추가
+  - [ ] 평면 데이터 → 계층 구조 변환
+  - [ ] sessions.metadata에 섹션 구조 저장
+  - [ ] expressions.metadata에 concept 정보 저장
+
+#### STEP 4: StyledText 컴포넌트 생성
+- [ ] `src/components/StyledText.tsx` 생성
+- [ ] 마크업 파싱 로직 구현 (`{r:텍스트}` → 빨간색)
+- [ ] Tailwind 색상 클래스 매핑
+
+#### STEP 5: GrammarScreen 컴포넌트 생성
+- [ ] `src/components/GrammarScreen.tsx` 생성
+- [ ] Accordion UI 구현 (섹션 펼치기/접기)
+- [ ] 섹션별 체크박스 구현
+- [ ] StyledText 컴포넌트 적용
+- [ ] 진행도 추적 (섹션 단위)
+
+#### STEP 6: 라우팅 및 통합
+- [ ] CategoriesScreen에 Grammar 카테고리 표시
+- [ ] 라우팅: `/category/grammar/session/[number]`
+- [ ] CategoryScreen에서 Grammar 감지 시 GrammarScreen 렌더링
+
+#### STEP 7: 테스트
+- [ ] 데이터 동기화 테스트
+- [ ] UI 렌더링 테스트
+- [ ] 진행도 추적 테스트
+- [ ] 마크업 색상 표시 테스트
+
+#### STEP 8: WordScreen (선택)
+- [ ] GrammarScreen 복사하여 WordScreen 생성
+- [ ] Word 카테고리 데이터 동기화
+
+---
+
+### 📝 참고 문서
+- [MARKUP_SYNTAX.md](./MARKUP_SYNTAX.md) - 텍스트 강조 마크업 문법
+- [PRD.md](./PRD.md) - 프로젝트 요구사항
+- [PROGRESS_TRACKING.md](./PROGRESS_TRACKING.md) - 진행도 추적 시스템
+
+---
+
+## 🐛 Phase 5: 품질 개선
 
 ### 10. 에러 처리 및 UX
 - [ ] 로딩 상태 UI 추가
