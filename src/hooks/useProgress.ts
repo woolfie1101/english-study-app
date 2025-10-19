@@ -76,11 +76,23 @@ export function useProgress() {
       // Filter by today's date in local timezone
       const today = getLocalDateString();
 
+      console.log('=== Filtering Completed Expressions ===');
+      console.log('Today:', today);
+      console.log('Total expressions in DB:', data?.length || 0);
+
       const todayCompleted = (data || []).filter(item => {
         if (!item.completed_at) return false;
         const completedDateStr = extractLocalDateString(item.completed_at);
-        return completedDateStr === today;
+        const isToday = completedDateStr === today;
+
+        if (!isToday) {
+          console.log(`Filtering out: ${item.expression_id.substring(0, 8)} - completed on ${completedDateStr}`);
+        }
+
+        return isToday;
       });
+
+      console.log('Expressions completed today:', todayCompleted.length);
 
       return todayCompleted;
     } catch (err) {

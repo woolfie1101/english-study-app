@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database'
+import { getLocalDateString, extractLocalDateString } from '@/lib/utils'
 
 type Category = Database['public']['Tables']['categories']['Row']
 type Session = Database['public']['Tables']['sessions']['Row']
@@ -51,8 +52,22 @@ export function useCategory(slug: string, userId: string = '00000000-0000-0000-0
 
       if (progressError) throw progressError
 
-      // Count total completed sessions (not just today)
-      const completed = progressData?.length || 0
+      // Filter by today's date in local timezone
+      const today = getLocalDateString()
+      const todayCompleted = (progressData || []).filter(item => {
+        if (!item.completed_at) return false
+        const completedDateStr = extractLocalDateString(item.completed_at)
+        return completedDateStr === today
+      })
+
+      // Count completed sessions for today only
+      const completed = todayCompleted.length
+
+      console.log('=== Category Progress ===')
+      console.log('Category:', categoryData.name)
+      console.log('Today:', today)
+      console.log('Total completed (all time):', progressData?.length || 0)
+      console.log('Completed today:', completed)
 
       const categoryWithSessions: CategoryWithSessions = {
         ...categoryData,
