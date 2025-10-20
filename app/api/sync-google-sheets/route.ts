@@ -26,12 +26,65 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate environment variables
+    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+      return NextResponse.json(
+        { error: 'GOOGLE_SERVICE_ACCOUNT_EMAIL is not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.GOOGLE_PRIVATE_KEY) {
+      return NextResponse.json(
+        { error: 'GOOGLE_PRIVATE_KEY is not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.GOOGLE_SPREADSHEET_ID) {
+      return NextResponse.json(
+        { error: 'GOOGLE_SPREADSHEET_ID is not configured' },
+        { status: 500 }
+      );
+    }
+
+    // Parse the private key properly
+    let privateKey: string;
+    try {
+      // Handle both escaped and non-escaped newlines
+      privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+
+      // Validate it's a proper private key format
+      if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
+        throw new Error('Invalid private key format');
+      }
+    } catch (keyError) {
+      console.error('Private key parsing error:', keyError);
+      return NextResponse.json(
+        { error: 'Invalid GOOGLE_PRIVATE_KEY format. Ensure it contains BEGIN/END markers and proper newlines.' },
+        { status: 500 }
+      );
+    }
+
     // Initialize Google Sheets
-    const serviceAccountAuth = new JWT({
-      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
+    let serviceAccountAuth: JWT;
+    try {
+      serviceAccountAuth = new JWT({
+        email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        key: privateKey,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+    } catch (jwtError) {
+      console.error('JWT initialization error:', jwtError);
+      const errorMessage = jwtError instanceof Error ? jwtError.message : String(jwtError);
+      return NextResponse.json(
+        {
+          error: 'Failed to initialize Google authentication',
+          details: `JWT Error: ${errorMessage}. Check that GOOGLE_PRIVATE_KEY is properly formatted with escaped newlines (\\n).`
+        },
+        { status: 500 }
+      );
+    }
 
     const doc = new GoogleSpreadsheet(
       process.env.GOOGLE_SPREADSHEET_ID!,
