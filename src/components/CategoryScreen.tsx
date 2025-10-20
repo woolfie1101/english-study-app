@@ -49,7 +49,7 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
       toast.error('카테고리 슬러그가 없습니다.');
       return;
     }
-    
+
     const sheetName = SHEET_NAME_MAP[category.slug];
     if (!sheetName) {
       toast.error('이 카테고리는 아직 자동 동기화를 지원하지 않습니다.');
@@ -68,10 +68,25 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
         body: JSON.stringify({ sheetName }),
       });
 
-      const data = await response.json();
+      // Check content type before parsing
+      const contentType = response.headers.get('content-type');
+
+      let data;
+      if (contentType?.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // Server returned HTML/text instead of JSON (likely an error page)
+        const text = await response.text();
+        console.error('Non-JSON response received:', text.substring(0, 200));
+        throw new Error(
+          `서버 에러 (HTTP ${response.status}): 환경 변수가 올바르게 설정되었는지 확인해주세요. ` +
+          `GCP 로그를 확인하세요.`
+        );
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to sync data');
+        const errorDetails = data.details ? `\n${data.details}` : '';
+        throw new Error(`${data.error || '서버 에러'}${errorDetails}`);
       }
 
       toast.success(data.message, {
@@ -87,8 +102,10 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
       }
     } catch (error) {
       console.error('Sync error:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       toast.error('동기화 실패', {
-        description: String(error),
+        description: errorMessage,
+        duration: 8000,
       });
     } finally {
       setSyncing(false);
