@@ -62,6 +62,8 @@ The `GOOGLE_PRIVATE_KEY` must be entered with **escaped newlines** (`\n`):
 4. Trigger a new deploy
 
 **Google Cloud Run:**
+
+**Step 1: Configure Environment Variables**
 1. Go to Cloud Run Console → Select your service
 2. Click "EDIT & DEPLOY NEW REVISION" (수정 및 새 리비전 배포)
 3. Go to "Variables & Secrets" tab (변수 및 보안 비밀)
@@ -82,8 +84,14 @@ The `GOOGLE_PRIVATE_KEY` must be entered with **escaped newlines** (`\n`):
      - Do NOT include the `"` quotes in the value field
      - GCP will automatically handle the value as a string
      - Use `\n` (backslash + n) for line breaks, not actual newlines
-6. Click "DEPLOY" (배포)
-7. Wait for deployment to complete
+
+**Step 2: Increase Request Timeout (Optional, if needed)**
+1. In the same "EDIT & DEPLOY NEW REVISION" page
+2. Expand "Container, Connections, Security" section (컨테이너, 연결, 보안)
+3. Under "General" tab, find "Request timeout" (요청 제한 시간)
+4. If you experience 504 timeout errors, increase from default (60 seconds) to **120 seconds** (2 minutes)
+5. Click "DEPLOY" (배포)
+6. Wait for deployment to complete
 
 **Alternative for Google Cloud Run (using Secret Manager - Recommended for sensitive data):**
 1. Go to Secret Manager → Create Secret

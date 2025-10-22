@@ -68,6 +68,14 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
         body: JSON.stringify({ sheetName }),
       });
 
+      // Handle timeout errors
+      if (response.status === 504) {
+        throw new Error(
+          '동기화 시간이 초과되었습니다. 데이터가 일부 업데이트되었을 수 있습니다. ' +
+          '페이지를 새로고침하여 확인해주세요.'
+        );
+      }
+
       // Check content type before parsing
       const contentType = response.headers.get('content-type');
 
