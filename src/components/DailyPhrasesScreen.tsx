@@ -6,6 +6,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AudioPlayer } from "./AudioPlayer";
+import { ScrollToTopButton } from "./ScrollToTopButton";
 import { Database } from "@/types/database";
 import { useProgress } from "@/hooks/useProgress";
 import { getNextSession } from "@/hooks/useSession";
@@ -251,7 +252,7 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
 
         {/* Next Session Button */}
         {allCompleted && (
-          <Button 
+          <Button
             onClick={handleNextSession}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center space-x-2"
           >
@@ -260,6 +261,9 @@ export function DailyPhrasesScreen({ category, session }: DailyPhrasesScreenProp
           </Button>
         )}
       </div>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTopButton />
     </div>
   );
 }
