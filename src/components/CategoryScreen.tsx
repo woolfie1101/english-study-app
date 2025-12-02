@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "./ui/card";
@@ -43,6 +43,7 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const inProgressRef = useRef<HTMLDivElement>(null);
 
   const handleSyncData = async () => {
     if (!category.slug) {
@@ -126,6 +127,19 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
     status: index < category.completed ? 'completed' : index === category.completed ? 'in-progress' : 'locked'
   }));
 
+  // Auto-scroll to in-progress session on mount
+  useEffect(() => {
+    if (inProgressRef.current) {
+      // Wait a bit for the DOM to fully render
+      setTimeout(() => {
+        inProgressRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+    }
+  }, [category.sessions]);
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -208,7 +222,9 @@ export function CategoryScreen({ category, onRefetch }: CategoryScreenProps) {
 
             return session.status !== 'locked' ? (
               <Link key={session.id} href={`/category/${category.slug}/session/${session.session_number}`}>
-                {SessionContent}
+                <div ref={session.status === 'in-progress' ? inProgressRef : null}>
+                  {SessionContent}
+                </div>
               </Link>
             ) : (
               <div key={session.id}>
